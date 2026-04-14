@@ -1,27 +1,4 @@
 /* ══════════════════════════════════════════════
-   CATÁLOGO NOM-010-SCFI-1994
-   Fuente: Lista oficial PROFECO/DGN — 775 páginas
-   Actualizado al 18 de septiembre de 2020
-   1,504 aprobaciones de modelo | todas las series
-   Estructura: DGN → {marca, modelos[], cert}
-══════════════════════════════════════════════ */
-
-
-/* Índice inverso: marca → [dgn, ...] para autocomplete por marca */
-
-for(const [dgn, data] of Object.entries(DGN_CATALOG)){
-  const m = data.marca;
-  if(!MARCAS_INDEX[m]) MARCAS_INDEX[m] = [];
-  MARCAS_INDEX[m].push(dgn);
-}
-
-/* Índice marca → modelos únicos con su DGN */
-
-
-/* Todos los tipos únicos */
-.sort();
-
-/* ══════════════════════════════════════════════
    BÚSQUEDA POR DGN — dato principal
 
 ══════════════════════════════════════════════ */
