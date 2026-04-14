@@ -1,2 +1,3 @@
-// Recepciones logic is integrated into usuarios.js
-// This file is reserved for future modular refactoring.
+// TODO: extraer funciones de usuarios.js
+// recepciones[], filtR, renderRec(), sortR(), guardarRecepcion(), selOrden(), addEntry(), validarFechaR()
+// Lógica de asignación automática de folios

@@ -1,2 +1,3 @@
-// Dictamen logic is integrated into render.js
-// This file is reserved for future modular refactoring.
+// TODO: extraer funciones de render.js
+// Variables: ndStep, NUM_INSTR
+// openNuevo(), closeNuevo(), ndNext(), ndPrev(), validFolioDict(), guardarDictamen()

@@ -1,2 +1,4 @@
-// Instrument logic is integrated into render.js
-// This file is reserved for future modular refactoring.
+// TODO: extraer funciones de render.js
+// buscarPorDGN(), aplicarDGN(), filtrarMarcas(), seleccionarMarca(), cerrarMarcas()
+// filtrarModelos(), seleccionarModelo(), cerrarModelos()
+// abrirFormInstr(), cancelarFormInstr(), guardarInstr()
