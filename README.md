@@ -82,8 +82,8 @@ No se necesita instalar nada. El proyecto funciona directamente en el navegador.
 
 #### Opción 1 — Desde el Explorador de archivos (más fácil)
 
-1. Descarga o clona el repositorio:
-   - Entra a [https://github.com/li3763-pip/Holocontrol](https://github.com/li3763-pip/Holocontrol)
+1. Descarga el repositorio:
+   - Entra a https://github.com/li3763-pip/Holocontrol
    - Haz clic en el botón verde **`Code`** → **`Download ZIP`**
    - Extrae el ZIP en una carpeta de tu computadora (por ejemplo `C:\Holocontrol`)
 
@@ -103,7 +103,7 @@ No se necesita instalar nada. El proyecto funciona directamente en el navegador.
 
 1. Instala [Git para Windows](https://git-scm.com/download/win) si no lo tienes
 
-2. Abre la aplicación **Git Bash** o el **Símbolo del sistema (CMD)**
+2. Abre **Git Bash** o el **Símbolo del sistema (CMD)**
 
 3. Ejecuta los siguientes comandos:
 
@@ -112,7 +112,7 @@ git clone https://github.com/li3763-pip/Holocontrol.git
 cd Holocontrol
 ```
 
-4. Abre los archivos:
+4. Abre las apps:
 
 ```bat
 REM App del Verificador
@@ -128,6 +128,99 @@ Se recomienda usar **Google Chrome** o **Microsoft Edge** para mejor compatibili
 - La función de obtener ubicación GPS (coordenadas UTM)
 - La cámara para evidencia fotográfica
 - El almacenamiento local (`localStorage`)
+
+---
+
+## 📲 Cómo ver la app en el celular
+
+La **App del Verificador** está diseñada para usarse en el celular. Hay dos formas de abrirla desde tu teléfono:
+
+### Opción A — Usando GitHub Pages (recomendado, sin instalar nada)
+
+El proyecto tiene GitHub Pages activado. Una vez que el PR sea aprobado y se haga merge, la app estará disponible en línea en:
+
+```
+https://li3763-pip.github.io/Holocontrol/src/apps/verificador/index.html
+```
+
+Solo abre esa URL desde el navegador de tu celular (Chrome o Safari).
+
+### Opción B — Desde tu computadora con servidor local (red WiFi)
+
+Esta opción permite abrir la app en el celular usando tu red WiFi local, sin necesidad de internet.
+
+#### Paso 1 — Instalar Python (si no lo tienes)
+
+1. Descarga Python desde https://www.python.org/downloads/
+2. Durante la instalación, marca la casilla **"Add Python to PATH"**
+3. Haz clic en **Install Now**
+
+#### Paso 2 — Levantar un servidor local
+
+1. Abre el **Símbolo del sistema (CMD)** y navega a la carpeta del proyecto:
+
+```bat
+cd C:\Holocontrol
+```
+
+2. Inicia el servidor con Python:
+
+```bat
+python -m http.server 8080
+```
+
+3. Verás un mensaje como:
+```
+Serving HTTP on 0.0.0.0 port 8080 (http://0.0.0.0:8080/) ...
+```
+
+#### Paso 3 — Obtener la IP de tu computadora
+
+1. Abre otra ventana del **CMD** y ejecuta:
+
+```bat
+ipconfig
+```
+
+2. Busca la línea que dice **"Dirección IPv4"**, por ejemplo:
+```
+Dirección IPv4. . . . . . . . . . . : 192.168.1.100
+```
+
+#### Paso 4 — Abrir en el celular
+
+1. Asegúrate de que tu celular esté conectado a la **misma red WiFi** que tu computadora
+2. Abre el navegador de tu celular (Chrome recomendado)
+3. Escribe la siguiente URL (usando la IP que obtuviste):
+
+```
+http://192.168.1.100:8080/src/apps/verificador/index.html
+```
+
+> 💡 Cambia `192.168.1.100` por la IP real de tu computadora
+
+#### Paso 5 — Agregar al inicio (opcional)
+
+Para acceder más rápido desde el celular sin escribir la URL cada vez:
+
+**En Android (Chrome):**
+1. Abre la URL en Chrome
+2. Toca los tres puntos (⋮) del menú
+3. Selecciona **"Agregar a pantalla de inicio"**
+4. La app aparecerá como un ícono en tu pantalla
+
+**En iPhone (Safari):**
+1. Abre la URL en Safari
+2. Toca el botón de compartir (□↑)
+3. Selecciona **"Agregar a pantalla de inicio"**
+4. La app aparecerá como un ícono en tu pantalla
+
+### ⚠️ Notas importantes para el celular
+
+- El servidor local (`python -m http.server`) debe estar corriendo en la computadora mientras uses la app en el celular
+- El celular y la computadora deben estar en la **misma red WiFi**
+- Usa **Chrome** en Android o **Safari** en iPhone para mejor compatibilidad
+- Las funciones de **GPS** y **cámara** funcionan mejor en el celular que en la computadora
 
 ---
 
