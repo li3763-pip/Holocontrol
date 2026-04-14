@@ -1,0 +1,109 @@
+
+
+@media(max-width:700px){
+  html,body{height:auto;min-height:100vh}
+
+  /* APP layout: columna en móvil */
+  .app{flex-direction:column;height:auto;min-height:100vh;overflow:auto}
+
+  /* SIDEBAR: se convierte en drawer */
+  .sidebar{
+    position:fixed;top:0;left:0;height:100vh;z-index:50;
+    transform:translateX(-100%);transition:transform .25s ease;
+    width:220px;box-shadow:4px 0 20px rgba(0,0,0,.15);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+
+  /* TOPBAR */
+  .topbar{padding:10px 14px;position:sticky;top:0;z-index:40;
+    background:var(--surface);border-bottom:1px solid var(--border)}
+  .topbar h2{font-size:14px}
+  .breadcrumb{font-size:9px}
+  .menu-btn{display:flex;align-items:center;justify-content:center;margin-right:8px}
+
+  /* MAIN */
+  .main{flex:1;width:100%}
+  .body{padding:12px;overflow:visible}
+
+  /* METRICS: 2 columnas en móvil */
+  .metrics{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .metric{padding:10px 12px}
+  .metric-val{font-size:18px}
+
+  /* TWO-COL: una columna */
+  .two-col{grid-template-columns:1fr;gap:10px}
+
+  /* CARDS */
+  .card{padding:12px;margin-bottom:10px}
+  .card-hd{margin-bottom:10px}
+
+  /* TABLAS: scroll horizontal */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:6px;border:1px solid var(--border)}
+  table{min-width:580px;font-size:11px}
+  th,td{padding:6px 8px;white-space:nowrap}
+
+  /* SEC-ACTIONS: scroll horizontal si hay muchos botones */
+  .sec-actions{flex-wrap:wrap;gap:6px;margin-bottom:12px;padding-bottom:10px}
+  .sec-actions .btn{font-size:11px;padding:6px 10px}
+
+  /* TOOLBAR */
+  .toolbar{flex-wrap:wrap;gap:6px}
+  .si.stretch{min-width:100%;order:-1}
+
+  /* MODAL */
+  .modal-bg{padding:0;align-items:flex-end}
+  .modal,.modal.sm,.modal.lg{
+    width:100%;max-width:100%;border-radius:14px 14px 0 0;
+    max-height:92vh;overflow-y:auto;margin:0;padding:16px 14px;
+  }
+  .modal h3{font-size:13px}
+
+  /* FGRID: una columna */
+  .fgrid{grid-template-columns:1fr}
+  .fg{margin-bottom:8px}
+  .fg[style*="grid-column:span 2"]{grid-column:span 1 !important}
+
+  /* SOCIOS 1 col */
+  .two-col > .card{margin:0}
+
+  /* TIPO-ROW en compra: ajustar */
+  .tipo-row{grid-template-columns:1fr 80px 26px;gap:6px}
+
+  /* SOCIOS cards */
+  #socios-cards{grid-template-columns:1fr !important}
+
+  /* STEP HEADER */
+  .step-header{padding:10px 12px}
+
+  /* FALTANTE PANEL */
+  .falt-hd-row,.falt-tipo-row,.falt-total-row{
+    grid-template-columns:1fr 54px 54px 54px 60px;gap:4px;font-size:10px
+  }
+
+  /* ASIG rows */
+  .socio-asig-row{flex-wrap:wrap;gap:8px;padding:10px 0}
+  .folio-range{font-size:10px;padding:3px 7px}
+
+  /* TIPO GROUP */
+  .tipo-group-hd{flex-wrap:wrap;gap:6px}
+
+  /* PROV CARD */
+  .prov-card-hd{flex-wrap:wrap;gap:10px}
+  .prov-precio-edit{flex-wrap:wrap}
+
+  /* DET BOX */
+  .det-box .det-row{font-size:11px}
+
+  /* RESUMEN compra */
+  .res-total-row{flex-wrap:wrap;gap:6px}
+}
+
+
+@media(max-width:400px){
+  .metrics{grid-template-columns:1fr}
+  table{min-width:480px;font-size:10px}
+  .falt-hd-row,.falt-tipo-row,.falt-total-row{
+    grid-template-columns:1fr 46px 46px 46px 52px;gap:3px;font-size:9px
+  }
+}

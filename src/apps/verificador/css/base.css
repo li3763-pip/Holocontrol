@@ -1,0 +1,36 @@
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#0F0E11;--surface:#1A1820;--surface2:#231F2D;--surface3:#2C2838;
+  --border:#332F40;--border2:#443F54;
+  --accent:#C23B6B;--accent2:#8B2D8B;--accent-glow:rgba(194,59,107,.22);
+  --green:#2DB87A;--green-bg:rgba(45,184,122,.12);
+  --amber:#E0A020;--amber-bg:rgba(224,160,32,.12);
+  --red:#E05050;--red-bg:rgba(224,80,80,.12);
+  --blue:#4A9EE0;--blue-bg:rgba(74,158,224,.12);
+  --purple:#9B59B6;--purple-bg:rgba(155,89,182,.12);
+  --text:#F0EDF5;--text2:#A89BB8;--text3:#6B5F7A;
+  --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;
+  --r:12px;--rsm:8px;
+}
+
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);overflow:hidden;font-size:14px}
+
+.app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
+
+
+/* NOISE */
+.app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");pointer-events:none;z-index:100;opacity:.4}
+
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;height:100%}
+
+.screen.active{display:flex}
+
+
+/* ── SCROLL ── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px}
+
+.scroll::-webkit-scrollbar{display:none}
