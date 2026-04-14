@@ -1680,7 +1680,7 @@ async function ubicarPorIP(){
   } catch(_){}
   // Segundo fallback: ip-api.com
   try {
-    const r = await fetch('http://ip-api.com/json/?fields=lat,lon,status', {signal: AbortSignal.timeout(6000)});
+    const r = await fetch('https://ip-api.com/json/?fields=lat,lon,status', {signal: AbortSignal.timeout(6000)});
     const d = await r.json();
     if(d.status === 'success'){
       return { lat: d.lat, lng: d.lon, acc: null, fuente: 'IP' };

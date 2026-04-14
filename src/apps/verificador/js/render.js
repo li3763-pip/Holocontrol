@@ -910,7 +910,7 @@ async function ubicarPorIP(){
   } catch(_){}
   // Segundo fallback: ip-api.com
   try {
-    const r = await fetch('http://ip-api.com/json/?fields=lat,lon,status', {signal: AbortSignal.timeout(6000)});
+    const r = await fetch('https://ip-api.com/json/?fields=lat,lon,status', {signal: AbortSignal.timeout(6000)});
     const d = await r.json();
     if(d.status === 'success'){
       return { lat: d.lat, lng: d.lon, acc: null, fuente: 'IP' };
@@ -984,7 +984,10 @@ function initGPSonFormOpen(){
 
 /* ══════════════════════════════════════════════
    POSTALIA API — Autocompletado por Código Postal
-   Token Bearer: personalizado del usuario
+   NOTA: Reemplaza el token con el tuyo propio.
+   No compartas este archivo con el token incluido.
+   Considera cargarlo desde una variable de entorno
+   o un archivo de configuración no versionado.
 ══════════════════════════════════════════════ */
 const POSTALIA_TOKEN = '42|MRCWikuGyaJzCr703hwXzViXOliNVSKDlH5v7xnvd7840827';
 const POSTALIA_BASE  = 'https://postalia.com.mx/api';
