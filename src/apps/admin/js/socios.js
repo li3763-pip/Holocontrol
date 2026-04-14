@@ -1,2 +1,2 @@
-// Socios logic is integrated into usuarios.js
-// This file is reserved for future modular refactoring.
+// TODO: extraer funciones de usuarios.js
+// socios[], renderSocios()

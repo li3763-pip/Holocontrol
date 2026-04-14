@@ -1,2 +1,3 @@
-// Transferencias logic is integrated into usuarios.js
-// This file is reserved for future modular refactoring.
+// TODO: extraer funciones de usuarios.js
+// transferencias[], filtT, renderTransferencias(), guardarTransferencia(), selTipoTrans(), updTransSocios()
+// confirmarTransferencia(), lógica PIN doble, panel pendientes, pinKey(), pinDel()
