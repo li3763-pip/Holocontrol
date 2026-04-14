@@ -1,2 +1,2 @@
-// Auth logic is integrated into render.js
+// Compras logic is integrated into usuarios.js
 // This file is reserved for future modular refactoring.
