@@ -360,7 +360,8 @@
 <!-- ═══════════════════ SECCIÓN: EQUIPO PATRÓN ═══════════════════ -->
 <div id="sec-equipo-patron" class="section">
   <div class="sec-actions">
-    <span style="font-size:11px;color:var(--text3)">Asigna un equipo desde la tabla.</span>
+    <span style="font-size:11px;color:var(--text3)">Asigna un equipo desde la tabla o usa el botón para asignar por rango.</span>
+    <button class="btn sm primary" onclick="abrirAsigRangoEquipo()" id="ep-btn-rango" style="display:none">Asignar por rango</button>
   </div>
 
   <!-- Métricas -->
@@ -407,6 +408,7 @@
           <th style="width:100px">Estado</th>
           <th>Verificador</th>
           <th style="width:80px">Socio</th>
+          <th style="width:130px">Días</th>
           <th style="width:100px">Acciones</th>
         </tr>
       </thead>
@@ -446,11 +448,69 @@
       <label class="fl">Fecha de asignación</label>
       <input class="fi" type="date" id="epa-fecha">
     </div>
+    <div class="fg" style="grid-column:span 2">
+      <label class="fl">Días de uso (deja vacío = todos los días)</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epa-dia-lun"> Lun</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epa-dia-mar"> Mar</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epa-dia-mie"> Mié</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epa-dia-jue"> Jue</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epa-dia-vie"> Vie</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epa-dia-sab"> Sáb</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epa-dia-dom"> Dom</label>
+      </div>
+    </div>
   </div>
   <div id="epa-err" style="display:none" class="err-box"></div>
   <div class="modal-btns">
     <button class="btn ghost" onclick="closeModal('modal-equipo-patron-asig')">Cancelar</button>
     <button class="btn primary" onclick="guardarAsigEquipo()">Asignar</button>
+  </div>
+</div>
+</div>
+
+
+<!-- ═══════════════════ MODAL ASIGNAR EQUIPO PATRÓN POR RANGO ═══════════════════ -->
+<div id="modal-equipo-patron-rango" class="modal-bg">
+<div class="modal">
+  <h3>Asignar equipo patrón por rango</h3>
+  <div class="fgrid">
+    <div class="fg" style="grid-column:span 2">
+      <label class="fl">Verificador</label>
+      <select class="fi" id="epra-verificador">
+        <option value="">Seleccionar verificador...</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Desde (No. inventario)</label>
+      <input class="fi" type="text" id="epra-desde" placeholder="Ej: V233" oninput="epraPreview()">
+    </div>
+    <div class="fg">
+      <label class="fl">Hasta (No. inventario)</label>
+      <input class="fi" type="text" id="epra-hasta" placeholder="Ej: V287" oninput="epraPreview()">
+    </div>
+    <div class="fg" style="grid-column:span 2">
+      <label class="fl">Fecha de asignación</label>
+      <input class="fi" type="date" id="epra-fecha">
+    </div>
+    <div class="fg" style="grid-column:span 2">
+      <label class="fl">Días de uso (deja vacío = todos los días)</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epra-dia-lun"> Lun</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epra-dia-mar"> Mar</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epra-dia-mie"> Mié</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epra-dia-jue"> Jue</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epra-dia-vie"> Vie</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epra-dia-sab"> Sáb</label>
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px"><input type="checkbox" id="epra-dia-dom"> Dom</label>
+      </div>
+    </div>
+  </div>
+  <div id="epra-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:11px;margin-bottom:10px"></div>
+  <div id="epra-err" style="display:none" class="err-box"></div>
+  <div class="modal-btns">
+    <button class="btn ghost" onclick="closeModal('modal-equipo-patron-rango')">Cancelar</button>
+    <button class="btn primary" onclick="guardarAsigRangoEquipo()">Asignar rango</button>
   </div>
 </div>
 </div>
