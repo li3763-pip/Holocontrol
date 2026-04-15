@@ -1322,3 +1322,28 @@ function demoDicts(){
       status:'ok', createdAt:new Date(Date.now()-7200000).toISOString() },
   ];
 }
+
+// ── Teclado suave: evitar salto al abrir el teclado ──
+(function(){
+  if (!window.visualViewport) return;
+  var kbdOpen = false;
+  function onVVResize(){
+    var kh = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+    var scrollEls = document.querySelectorAll('.scroll');
+    if (kh > 80) {
+      scrollEls.forEach(function(el){ el.style.paddingBottom = kh + 'px'; });
+      if (!kbdOpen) {
+        kbdOpen = true;
+        var focused = document.activeElement;
+        if (focused && focused !== document.body) {
+          setTimeout(function(){ focused.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80);
+        }
+      }
+    } else {
+      scrollEls.forEach(function(el){ el.style.paddingBottom = ''; });
+      kbdOpen = false;
+    }
+  }
+  window.visualViewport.addEventListener('resize', onVVResize);
+  window.visualViewport.addEventListener('scroll', onVVResize);
+})();
