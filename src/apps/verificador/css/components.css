@@ -158,8 +158,6 @@ textarea.fi{resize:none}
 
 .dict-checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 
-.dict-check-fld{}
-
 .dict-check-lbl{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
 
 .dict-result-fld{border-top:1px solid var(--border);padding-top:10px}

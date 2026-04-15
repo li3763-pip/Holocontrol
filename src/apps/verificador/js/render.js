@@ -669,6 +669,8 @@ function eliminarInstr(idx){
 }
 
 /* ══ DICTAMEN: cards por instrumento en paso 3 ══ */
+function tipoStr(t){ return t==='M'?'Mecánico':t==='E'?'Electrónico':t==='H'?'Híbrido':t; }
+
 function syncDictRows(){
   const container=document.getElementById('dict-cards-container');
   if(!container) return;
@@ -687,7 +689,7 @@ function syncDictRows(){
       <div class="dict-card-hd">
         <div class="instr-num">${i+1}</div>
         <div class="dict-card-name">${ins.marca||'—'}${ins.modelo?' '+ins.modelo:''}</div>
-        ${ins.tipo?`<div class="dict-card-sub">${ins.tipo==='M'?'Mecánico':ins.tipo==='E'?'Electrónico':ins.tipo==='H'?'Híbrido':ins.tipo}</div>`:''}
+        ${ins.tipo?`<div class="dict-card-sub">${tipoStr(ins.tipo)}</div>`:''}
       </div>
       <div class="dict-checks-grid">
         ${checkFields.map(f=>`
@@ -718,7 +720,7 @@ function setDictVal(id, val){
   if(!input) return;
   input.value=val;
   // Derive group element id: dv-0 → dvg-0, dc-0 → dcg-0
-  const grpId=id.replace('-','g-');
+  const grpId=id.replace(/^([^-]+)-/,'$1g-');
   const grp=document.getElementById(grpId);
   if(grp){
     grp.querySelectorAll('.dict-btn').forEach(btn=>{
