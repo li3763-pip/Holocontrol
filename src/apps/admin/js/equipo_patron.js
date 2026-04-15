@@ -89,8 +89,9 @@ function epDiasLabel(dias){
 }
 
 function epParsearId(idStr){
-  // Retorna {serie, num} o null si no coincide
-  const m=idStr.match(/^([A-Za-z]+)(\d+)$/);
+  // Acepta formatos: V001, V-001, VF01, M01, etc.
+  const normalizado=idStr.replace(/-/g,'');
+  const m=normalizado.match(/^([A-Za-z]+)(\d+)$/);
   if(!m) return null;
   return {serie:m[1].toUpperCase(), num:parseInt(m[2],10)};
 }
@@ -114,6 +115,7 @@ const EP_TIPO_ORDER=['M','C','D','V'];
 const EP_TIPO_NAMES={M:'Marco',C:'Cinco',D:'Diez',V:'Veinte'};
 
 function renderEquipoPatron(){
+  epInitInventario();
   const texto=(epFilt.texto||'').toLowerCase();
   const clase=epFilt.clase;
   const estado=epFilt.estado;
@@ -324,7 +326,7 @@ function epShowErr(errEl,msg){if(errEl){errEl.style.display='block';errEl.textCo
 function epRangoCatalogo(desdeId,hastaId,errEl){
   const a=epParsearId(desdeId);
   const b=epParsearId(hastaId);
-  if(!a||!b){epShowErr(errEl,'Formato de No. inventario inválido (ej: V233).');return null;}
+  if(!a||!b){epShowErr(errEl,'Formato de No. inventario inválido (ej: V-001 o V001).');return null;}
   if(a.serie!==b.serie){epShowErr(errEl,'Los dos equipos deben ser de la misma serie (ej: V).');return null;}
   const numMin=Math.min(a.num,b.num);
   const numMax=Math.max(a.num,b.num);
@@ -370,6 +372,29 @@ function guardarAsigRangoEquipo(){
   renderEquipoPatron();
   if(asignados>0) alert(`${asignados} equipo(s) asignados correctamente a ${ver.nombre}.`);
   else alert('No se asignó ningún equipo (todos del rango ya estaban ocupados).');
+}
+
+/* ── INVENTARIO RETRÁCTIL ── */
+const EP_INV_MAX_H='2000px';
+let epInvExpanded=true;
+let epInvInitialized=false;
+
+function epInitInventario(){
+  if(epInvInitialized) return;
+  epInvInitialized=true;
+  const body=document.getElementById('ep-inv-body');
+  if(body) body.style.maxHeight=EP_INV_MAX_H;
+}
+
+function epToggleInventario(){
+  epInvExpanded=!epInvExpanded;
+  const body=document.getElementById('ep-inv-body');
+  const chevron=document.getElementById('ep-inv-chevron');
+  if(body){
+    body.style.maxHeight=epInvExpanded?EP_INV_MAX_H:'0px';
+    body.style.opacity=epInvExpanded?'1':'0';
+  }
+  if(chevron) chevron.style.transform=epInvExpanded?'rotate(0deg)':'rotate(-90deg)';
 }
 
 /* ── TÍTULOS Y NAVEGACIÓN ── */

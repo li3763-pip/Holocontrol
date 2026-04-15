@@ -383,51 +383,60 @@
     </div>
   </div>
 
-  <!-- Filtros -->
-  <div class="toolbar" style="margin-bottom:14px">
-    <input class="si stretch" placeholder="Buscar no. inventario o verificador..." id="ep-filt-texto" oninput="epFiltrar()">
-    <select class="si" id="ep-filt-tipo" onchange="epFiltrar()">
-      <option value="">Todos los tipos</option>
-      <option value="M">M — Marco</option>
-      <option value="C">C — Cinco</option>
-      <option value="D">D — Diez</option>
-      <option value="V">V — Veinte</option>
-    </select>
-    <select class="si" id="ep-filt-clase" onchange="epFiltrar()">
-      <option value="">Todas las clases</option>
-      <option value="M1">Clase M1</option>
-      <option value="F2">Clase F2</option>
-    </select>
-    <select class="si" id="ep-filt-estado" onchange="epFiltrar()">
-      <option value="">Todos los estados</option>
-      <option value="libre">Solo libres</option>
-      <option value="asignado">Solo asignados</option>
-    </select>
+  <!-- Cabecera retráctil del inventario -->
+  <div onclick="epToggleInventario()" onkeydown="if(event.key==='Enter'||event.key===' ')epToggleInventario()" role="button" tabindex="0" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 10px;background:var(--surface2,#f4f4f5);border:1px solid var(--border,#e4e4e7);border-radius:6px;margin-bottom:0;user-select:none" title="Mostrar / ocultar inventario">
+    <span style="font-size:12px;font-weight:600;color:var(--text1)">Inventario de equipos</span>
+    <svg id="ep-inv-chevron" viewBox="0 0 16 16" width="14" height="14" style="flex-shrink:0;transition:transform .2s;transform:rotate(0deg)" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 6 8 10 12 6"/></svg>
   </div>
 
-  <!-- Tabla -->
-  <div class="tbl-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:110px">No. Inventario</th>
-          <th style="width:120px">Clase de exactitud</th>
-          <th style="width:100px">Estado</th>
-          <th>Verificador</th>
-          <th style="width:80px">Socio</th>
-          <th style="width:130px">Días</th>
-          <th style="width:100px">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="ep-tbody"></tbody>
-    </table>
-  </div>
+  <!-- Contenido retráctil -->
+  <div id="ep-inv-body" style="overflow:hidden;transition:max-height .3s ease,opacity .2s ease;opacity:1">
+    <!-- Filtros -->
+    <div class="toolbar" style="margin-top:12px;margin-bottom:14px">
+      <input class="si stretch" placeholder="Buscar no. inventario o verificador..." id="ep-filt-texto" oninput="epFiltrar()">
+      <select class="si" id="ep-filt-tipo" onchange="epFiltrar()">
+        <option value="">Todos los tipos</option>
+        <option value="M">M — Marco</option>
+        <option value="C">C — Cinco</option>
+        <option value="D">D — Diez</option>
+        <option value="V">V — Veinte</option>
+      </select>
+      <select class="si" id="ep-filt-clase" onchange="epFiltrar()">
+        <option value="">Todas las clases</option>
+        <option value="M1">Clase M1</option>
+        <option value="F2">Clase F2</option>
+      </select>
+      <select class="si" id="ep-filt-estado" onchange="epFiltrar()">
+        <option value="">Todos los estados</option>
+        <option value="libre">Solo libres</option>
+        <option value="asignado">Solo asignados</option>
+      </select>
+    </div>
 
-  <!-- Paginación -->
-  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px">
-    <span style="font-size:11px;color:var(--text3)" id="ep-pag-info"></span>
-    <button class="btn sm ghost" id="ep-pag-prev" onclick="epPrev()">← Anterior</button>
-    <button class="btn sm ghost" id="ep-pag-next" onclick="epNext()">Siguiente →</button>
+    <!-- Tabla -->
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:110px">No. Inventario</th>
+            <th style="width:120px">Clase de exactitud</th>
+            <th style="width:100px">Estado</th>
+            <th>Verificador</th>
+            <th style="width:80px">Socio</th>
+            <th style="width:130px">Días</th>
+            <th style="width:100px">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="ep-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px">
+      <span style="font-size:11px;color:var(--text3)" id="ep-pag-info"></span>
+      <button class="btn sm ghost" id="ep-pag-prev" onclick="epPrev()">← Anterior</button>
+      <button class="btn sm ghost" id="ep-pag-next" onclick="epNext()">Siguiente →</button>
+    </div>
   </div>
 </div>
 
@@ -490,11 +499,11 @@
     </div>
     <div class="fg">
       <label class="fl">Desde (No. inventario)</label>
-      <input class="fi" type="text" id="epra-desde" placeholder="Ej: V233" oninput="epraPreview()">
+      <input class="fi" type="text" id="epra-desde" placeholder="Ej: V-001 o V001" oninput="epraPreview()">
     </div>
     <div class="fg">
       <label class="fl">Hasta (No. inventario)</label>
-      <input class="fi" type="text" id="epra-hasta" placeholder="Ej: V287" oninput="epraPreview()">
+      <input class="fi" type="text" id="epra-hasta" placeholder="Ej: V-100 o V100" oninput="epraPreview()">
     </div>
     <div class="fg" style="grid-column:span 2">
       <label class="fl">Fecha de asignación</label>
