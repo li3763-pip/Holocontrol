@@ -274,38 +274,130 @@ function renderPerf(){
 /* ══════════════════════════════════════════════
    MODAL NUEVO DICTAMEN
 ══════════════════════════════════════════════ */
-/* Quita el estado de solo lectura de los campos de equipo patrón. */
+/* Estado de modo rango por tipo de equipo patrón */
+const epRangoMode={m:false,c:false,d:false,v:false};
+
+/* Alterna entre modo único y modo rango para el tipo k (m|c|d|v). */
+function epToggleRango(k){
+  epRangoMode[k]=!epRangoMode[k];
+  const sel=document.getElementById('ep-'+k);
+  const rngDiv=document.getElementById('ep-rng-'+k);
+  if(sel) sel.style.display=epRangoMode[k]?'none':'';
+  if(rngDiv) rngDiv.style.display=epRangoMode[k]?'block':'none';
+  const btn=document.getElementById('ep-lbl-'+k)?.querySelector('.ep-rng-toggle');
+  if(btn) btn.textContent=epRangoMode[k]?'↩ Único':'↔ Rango';
+}
+
+/* Devuelve el valor efectivo del equipo patrón para el tipo k:
+   en modo rango retorna "DESDE–HASTA", en modo único retorna el ID seleccionado.
+   Valida que 'desde' no sea posterior a 'hasta' en la lista de opciones. */
+function getEpValue(k){
+  if(epRangoMode[k]){
+    const desdeEl=document.getElementById('ep-'+k+'-desde');
+    const hastaEl=document.getElementById('ep-'+k+'-hasta');
+    const desde=desdeEl?.value||'';
+    const hasta=hastaEl?.value||'';
+    if(desde&&hasta){
+      // Verificar orden: desde debe aparecer antes o igual que hasta en la lista
+      const opts=Array.from(desdeEl?.options||[]).map(o=>o.value).filter(Boolean);
+      const iDesde=opts.indexOf(desde);
+      const iHasta=opts.indexOf(hasta);
+      if(iDesde>iHasta){
+        // Intercambiar silenciosamente para garantizar orden correcto
+        return hasta+'–'+desde;
+      }
+      if(desde!==hasta) return desde+'–'+hasta;
+      return desde;
+    }
+    return desde||hasta;
+  }
+  return document.getElementById('ep-'+k)?.value||'';
+}
+
+/* Reinicia la UI de equipo patrón al estado inicial (modo único, selects vacíos). */
 function resetEquipoPatronFields(){
   ['m','c','d','v'].forEach(k=>{
-    const el=document.getElementById('ep-'+k);
-    if(el){ el.readOnly=false; el.style.background=''; el.style.cursor=''; el.title=''; }
+    // Volver a modo único si estaba en rango
+    if(epRangoMode[k]){
+      epRangoMode[k]=false;
+      const sel=document.getElementById('ep-'+k);
+      const rngDiv=document.getElementById('ep-rng-'+k);
+      if(sel) sel.style.display='';
+      if(rngDiv) rngDiv.style.display='none';
+      const btn=document.getElementById('ep-lbl-'+k)?.querySelector('.ep-rng-toggle');
+      if(btn) btn.textContent='↔ Rango';
+    }
   });
   const nota=document.getElementById('ep-nota');
   if(nota) nota.style.display='none';
 }
 
-/* Auto-rellena los campos de equipo patrón con los equipos asignados al verificador
-   en el panel admin y los hace de solo lectura. Si un campo no tiene asignación,
-   permanece vacío y editable. */
+/* Rellena los selects de equipo patrón con los equipos asignados al verificador.
+   Si el tipo tiene un solo equipo lo preselecciona; si tiene varios muestra el
+   botón "↔ Rango" para alternar entre selección única y selección por rango. */
 function fillEquipoPatron(){
   if(!SESSION) return;
-  const ep = SESSION.equipoPatron||{};
-  let anyAssigned = false;
+  const ea=SESSION.equiposAsignados||{m:[],c:[],d:[],v:[]};
+  let anyAssigned=false;
   ['m','c','d','v'].forEach(k=>{
-    const el=document.getElementById('ep-'+k);
-    if(!el) return;
-    if(ep[k]){
-      el.value=ep[k];
-      el.readOnly=true;
-      el.title='Equipo asignado por el panel admin (solo lectura)';
-      el.style.background='var(--surface3,#f4f4f5)';
-      el.style.cursor='not-allowed';
-      anyAssigned=true;
+    const sel=document.getElementById('ep-'+k);
+    const desde=document.getElementById('ep-'+k+'-desde');
+    const hasta=document.getElementById('ep-'+k+'-hasta');
+    const lbl=document.getElementById('ep-lbl-'+k);
+    if(!sel) return;
+
+    const opciones=ea[k]||[];
+
+    // Asegurar modo único al abrir
+    epRangoMode[k]=false;
+    sel.style.display='';
+    const rngDiv=document.getElementById('ep-rng-'+k);
+    if(rngDiv) rngDiv.style.display='none';
+
+    // Poblar select único
+    sel.innerHTML='';
+    if(opciones.length===0){
+      sel.innerHTML='<option value="">— Sin asignación —</option>';
+      sel.disabled=true;
     } else {
-      el.readOnly=false;
-      el.title='';
-      el.style.background='';
-      el.style.cursor='';
+      sel.disabled=false;
+      if(opciones.length>1) sel.innerHTML='<option value="">Seleccionar...</option>';
+      opciones.forEach(id=>{
+        const opt=document.createElement('option');
+        opt.value=id; opt.textContent=id;
+        sel.appendChild(opt);
+      });
+      if(opciones.length===1) sel.value=opciones[0];
+      anyAssigned=true;
+    }
+
+    // Poblar selects de rango
+    if(desde&&hasta){
+      [desde,hasta].forEach((s,i)=>{
+        s.innerHTML=`<option value="">${i===0?'Desde…':'Hasta…'}</option>`;
+        opciones.forEach(id=>{
+          const opt=document.createElement('option');
+          opt.value=id; opt.textContent=id;
+          s.appendChild(opt);
+        });
+      });
+    }
+
+    // Botón toggle rango: solo se muestra cuando hay más de una opción
+    if(lbl){
+      let btn=lbl.querySelector('.ep-rng-toggle');
+      if(opciones.length>1){
+        if(!btn){
+          btn=document.createElement('span');
+          btn.className='ep-rng-toggle';
+          btn.onclick=()=>epToggleRango(k);
+          lbl.appendChild(btn);
+        }
+        btn.textContent='↔ Rango';
+        btn.style.display='';
+      } else if(btn){
+        btn.style.display='none';
+      }
     }
   });
   const nota=document.getElementById('ep-nota');
@@ -337,7 +429,7 @@ function closeNuevo(){
 
 function resetNuevo(){
   instrBuffer=[];
-  // Quitar readonly de campos de equipo patrón antes de limpiar
+  // Reiniciar UI de equipo patrón (modo rango → único) antes de limpiar valores
   resetEquipoPatronFields();
   ['nd-razon','nd-calle','nd-muni','nd-cp','nd-utm','nd-obs','nd-folio-dict',
    'ep-m','ep-c','ep-d','ep-v','nd-apoyo','pago-sub','pago-iva','pago-total',
@@ -752,10 +844,10 @@ function guardarRegistro(){
     fechaDict:document.getElementById('nd-fecha-dict').value,
     instrumentos,
     equipoPatron:{
-      m:document.getElementById('ep-m').value,
-      c:document.getElementById('ep-c').value,
-      d:document.getElementById('ep-d').value,
-      v:document.getElementById('ep-v').value,
+      m:getEpValue('m'),
+      c:getEpValue('c'),
+      d:getEpValue('d'),
+      v:getEpValue('v'),
     },
     pago:{
       sub:document.getElementById('pago-sub').value,

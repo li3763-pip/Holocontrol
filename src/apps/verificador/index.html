@@ -425,24 +425,44 @@
       <!-- Equipo patrón -->
       <div class="sec-lbl">Equipo patrón — Identificación</div>
       <div id="ep-nota" style="font-size:11px;color:var(--text3);margin-bottom:8px;display:none">
-        🔒 Equipos asignados por el panel admin. Edita la asignación desde el panel de administración.
+        🔒 Solo puedes usar los equipos patrón que tienes asignados.
       </div>
       <div class="fgrid">
         <div class="fld">
-          <label>M (Marco)</label>
-          <input class="fi mono" id="ep-m" placeholder="ID equipo">
+          <label id="ep-lbl-m">M (Marco)</label>
+          <select class="fi mono" id="ep-m"></select>
+          <div id="ep-rng-m" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-m-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-m-hasta"></select>
+          </div>
         </div>
         <div class="fld">
-          <label>C (Cinco)</label>
-          <input class="fi mono" id="ep-c" placeholder="ID equipo">
+          <label id="ep-lbl-c">C (Cinco)</label>
+          <select class="fi mono" id="ep-c"></select>
+          <div id="ep-rng-c" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-c-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-c-hasta"></select>
+          </div>
         </div>
         <div class="fld">
-          <label>D (Diez)</label>
-          <input class="fi mono" id="ep-d" placeholder="ID equipo">
+          <label id="ep-lbl-d">D (Diez)</label>
+          <select class="fi mono" id="ep-d"></select>
+          <div id="ep-rng-d" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-d-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-d-hasta"></select>
+          </div>
         </div>
         <div class="fld">
-          <label>V (Veinte)</label>
-          <input class="fi mono" id="ep-v" placeholder="ID equipo">
+          <label id="ep-lbl-v">V (Veinte)</label>
+          <select class="fi mono" id="ep-v"></select>
+          <div id="ep-rng-v" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-v-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-v-hasta"></select>
+          </div>
         </div>
       </div>
     </div>
