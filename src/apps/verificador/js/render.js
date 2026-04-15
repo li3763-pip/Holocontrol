@@ -1325,24 +1325,33 @@ function demoDicts(){
 
 // ── Teclado suave: evitar salto al abrir el teclado ──
 (function(){
+  // Fija --app-h al alto del viewport de layout (no cambia cuando abre el teclado)
+  function setAppH(){ document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
+  setAppH();
+  window.addEventListener('resize', setAppH);
+
   if (!window.visualViewport) return;
   var kbdOpen = false;
+  var rafId = null;
   function onVVResize(){
-    var kh = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-    var scrollEls = document.querySelectorAll('.scroll');
-    if (kh > 80) {
-      scrollEls.forEach(function(el){ el.style.paddingBottom = kh + 'px'; });
-      if (!kbdOpen) {
-        kbdOpen = true;
-        var focused = document.activeElement;
-        if (focused && focused !== document.body) {
-          setTimeout(function(){ focused.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80);
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(function(){
+      var kh = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+      var scrollEls = document.querySelectorAll('.scroll, .mf-body');
+      if (kh > 80) {
+        scrollEls.forEach(function(el){ el.style.paddingBottom = kh + 'px'; });
+        if (!kbdOpen) {
+          kbdOpen = true;
+          var focused = document.activeElement;
+          if (focused && focused !== document.body) {
+            setTimeout(function(){ focused.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 350);
+          }
         }
+      } else {
+        scrollEls.forEach(function(el){ el.style.paddingBottom = ''; });
+        kbdOpen = false;
       }
-    } else {
-      scrollEls.forEach(function(el){ el.style.paddingBottom = ''; });
-      kbdOpen = false;
-    }
+    });
   }
   window.visualViewport.addEventListener('resize', onVVResize);
   window.visualViewport.addEventListener('scroll', onVVResize);
