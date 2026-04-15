@@ -89,16 +89,12 @@ function epDiasLabel(dias){
 }
 
 function epParsearId(idStr){
-  // Retorna {serie, num} o null si no coincide
-  const m=idStr.match(/^([A-Za-z]+)(\d+)$/);
+  // Acepta formatos: V001, V-001, VF01, M01, etc.
+  const normalizado=idStr.replace(/-/g,'');
+  const m=normalizado.match(/^([A-Za-z]+)(\d+)$/);
   if(!m) return null;
   return {serie:m[1].toUpperCase(), num:parseInt(m[2],10)};
 }
-
-/* ── ESTADO PAGINACIÓN / FILTROS ── */
-const epFilt={texto:'',clase:'',estado:'',tipo:''};
-let epPage=1;
-const EP_PAGE_SIZE=50;
 
 /* ── HELPERS ── */
 function getAsigEquipo(equipoId){
@@ -109,27 +105,21 @@ function equipoLibre(equipoId){
   return !getAsigEquipo(equipoId);
 }
 
+/* ── METADATA DE SERIES ── */
+const EP_SERIES_META=[
+  {serie:'M',  nombre:'Marco',     clase:'M1'},
+  {serie:'C',  nombre:'Cinco',     clase:'M1'},
+  {serie:'D',  nombre:'Diez',      clase:'M1'},
+  {serie:'V',  nombre:'Veinte',    clase:'M1'},
+  {serie:'MF', nombre:'Marco F2',  clase:'F2'},
+  {serie:'CF', nombre:'Cinco F2',  clase:'F2'},
+  {serie:'DF', nombre:'Diez F2',   clase:'F2'},
+  {serie:'VF', nombre:'Veinte F2', clase:'F2'},
+];
+
 /* ── RENDER ── */
-const EP_TIPO_ORDER=['M','C','D','V'];
-const EP_TIPO_NAMES={M:'Marco',C:'Cinco',D:'Diez',V:'Veinte'};
-
 function renderEquipoPatron(){
-  const texto=(epFilt.texto||'').toLowerCase();
-  const clase=epFilt.clase;
-  const estado=epFilt.estado;
-  const tipo=epFilt.tipo;
-
-  const lista=EQUIPO_PATRON_CATALOG.filter(e=>{
-    if(clase&&e.clase!==clase) return false;
-    if(tipo&&e.tipo!==tipo) return false;
-    const asig=getAsigEquipo(e.id);
-    if(estado==='libre'&&asig) return false;
-    if(estado==='asignado'&&!asig) return false;
-    if(texto&&!(e.id.toLowerCase().includes(texto)||(asig&&asig.verificadorNombre.toLowerCase().includes(texto))||(asig&&asig.socio.toLowerCase().includes(texto)))) return false;
-    return true;
-  });
-
-  // Métricas
+  // Métricas globales
   const total=EQUIPO_PATRON_CATALOG.length;
   const asignados=asignacionesEquipo.length;
   const libres=total-asignados;
@@ -137,78 +127,45 @@ function renderEquipoPatron(){
   document.getElementById('ep-metric-asignados').textContent=asignados.toLocaleString();
   document.getElementById('ep-metric-libres').textContent=libres.toLocaleString();
 
-  // Paginación
-  const totalPag=Math.ceil(lista.length/EP_PAGE_SIZE)||1;
-  if(epPage>totalPag) epPage=totalPag;
-  const desde=(epPage-1)*EP_PAGE_SIZE;
-  const pagina=lista.slice(desde,desde+EP_PAGE_SIZE);
-
   const canEdit=SESSION.rol==='admin'||SESSION.rol==='personal'||SESSION.rol==='socio';
   const btnRango=document.getElementById('ep-btn-rango');
   if(btnRango) btnRango.style.display=canEdit?'':'none';
 
-  // Agrupar por tipo manteniendo el orden M→C→D→V
-  const grupos={};
-  EP_TIPO_ORDER.forEach(t=>{grupos[t]=[];});
-  pagina.forEach(e=>{if(grupos[e.tipo]) grupos[e.tipo].push(e);});
-
+  // Resumen por serie
   let tbody='';
-  EP_TIPO_ORDER.forEach(t=>{
-    const items=grupos[t];
-    if(!items||items.length===0) return;
-    tbody+=`<tr><td colspan="7" style="background:var(--surface2,#f4f4f5);padding:4px 10px;font-size:11px;font-weight:700;color:var(--text2);border-top:2px solid var(--border,#e4e4e7);letter-spacing:.5px">${t} — ${EP_TIPO_NAMES[t]} <span style="font-weight:400;color:var(--text3)">(${items.length})</span></td></tr>`;
-    items.forEach(e=>{
-      const asig=getAsigEquipo(e.id);
-      const estadoChip=asig
-        ?`<span class="chip parcial">Asignado</span>`
-        :`<span class="chip completo">Libre</span>`;
-      const verNombre=asig?`<span style="font-size:12px">${asig.verificadorNombre}</span>`:`<span style="color:var(--text3)">—</span>`;
-      const socioChip=asig?`<span class="chip ${scls(asig.socio)||'p3'}">${INITIALS[asig.socio]||asig.socio}</span>`:`<span style="color:var(--text3)">—</span>`;
-      const claseChip=e.clase==='M1'
-        ?`<span class="tipo-badge t-s1">M1</span>`
-        :`<span class="tipo-badge t-s2">F2</span>`;
-      const fechaStr=asig?`<span style="font-size:10px;color:var(--text3)">${asig.fecha}</span>`:``;
-      const diasHtml=asig?epDiasLabel(asig.dias):`<span style="color:var(--text3)">—</span>`;
-      let acciones='—';
-      if(canEdit){
-        if(asig){
-          // Socio solo puede liberar equipos de sus propios verificadores
-          const puedeLiberar=SESSION.rol==='admin'||SESSION.rol==='personal'||(SESSION.rol==='socio'&&asig.socio===SESSION.socio);
-          acciones=puedeLiberar?`<button class="btn sm ghost" style="color:var(--red)" onclick="confirmarLiberarEquipo('${e.id}')">Liberar</button>`:'—';
-        } else {
-          acciones=`<button class="btn sm primary" onclick="abrirAsigEquipo('${e.id}')">Asignar</button>`;
-        }
+  EP_SERIES_META.forEach(meta=>{
+    const items=EQUIPO_PATRON_CATALOG.filter(e=>e.serie===meta.serie);
+    if(!items.length) return;
+    const itemLibres=items.filter(e=>equipoLibre(e.id));
+    const itemAsig=items.length-itemLibres.length;
+    const claseChip=meta.clase==='M1'
+      ?`<span class="tipo-badge t-s1">M1</span>`
+      :`<span class="tipo-badge t-s2">F2</span>`;
+    const primerItemId=items[0].id;
+    const ultimoItemId=items[items.length-1].id;
+    const rangoStr=items.length===1?primerItemId:`${primerItemId} – ${ultimoItemId}`;
+    const libresColor=itemLibres.length===0?'var(--red)':itemLibres.length<items.length?'var(--amber)':'var(--green)';
+    let btnAsig='—';
+    if(canEdit){
+      if(itemLibres.length===0){
+        btnAsig=`<button class="btn sm ghost" disabled aria-disabled="true" title="Sin equipos disponibles">Sin disponibles</button>`;
+      } else {
+        btnAsig=`<button class="btn sm primary" onclick="abrirAsigPorTipo('${meta.serie}')">Asignar</button>`;
       }
-      tbody+=`<tr>
-        <td style="font-family:var(--mono);font-weight:500">${e.id}</td>
-        <td>${claseChip}</td>
-        <td>${estadoChip}</td>
-        <td>${verNombre}<br>${fechaStr}</td>
-        <td>${socioChip}</td>
-        <td style="white-space:normal">${diasHtml}</td>
-        <td>${acciones}</td>
-      </tr>`;
-    });
+    }
+    tbody+=`<tr>
+      <td style="font-family:var(--mono);font-weight:700;font-size:13px">${meta.serie}</td>
+      <td>${meta.nombre}</td>
+      <td>${claseChip}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${rangoStr}</td>
+      <td style="text-align:center">${items.length}</td>
+      <td style="text-align:center;color:var(--blue)">${itemAsig}</td>
+      <td style="text-align:center;font-weight:700;color:${libresColor}">${itemLibres.length}</td>
+      <td>${btnAsig}</td>
+    </tr>`;
   });
 
-  document.getElementById('ep-tbody').innerHTML=tbody||`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Sin resultados.</td></tr>`;
-
-  // Info paginación
-  document.getElementById('ep-pag-info').textContent=`${desde+1}–${Math.min(desde+EP_PAGE_SIZE,lista.length)} de ${lista.length}`;
-  document.getElementById('ep-pag-prev').disabled=epPage<=1;
-  document.getElementById('ep-pag-next').disabled=epPage>=totalPag;
-}
-
-function epPrev(){if(epPage>1){epPage--;renderEquipoPatron();}}
-function epNext(){epPage++;renderEquipoPatron();}
-
-function epFiltrar(){
-  epFilt.texto=document.getElementById('ep-filt-texto').value||'';
-  epFilt.clase=document.getElementById('ep-filt-clase').value||'';
-  epFilt.estado=document.getElementById('ep-filt-estado').value||'';
-  epFilt.tipo=document.getElementById('ep-filt-tipo').value||'';
-  epPage=1;
-  renderEquipoPatron();
+  document.getElementById('ep-resumen-tbody').innerHTML=tbody||`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Sin datos.</td></tr>`;
 }
 
 /* ── ASIGNAR EQUIPO ── */
@@ -324,7 +281,7 @@ function epShowErr(errEl,msg){if(errEl){errEl.style.display='block';errEl.textCo
 function epRangoCatalogo(desdeId,hastaId,errEl){
   const a=epParsearId(desdeId);
   const b=epParsearId(hastaId);
-  if(!a||!b){epShowErr(errEl,'Formato de No. inventario inválido (ej: V233).');return null;}
+  if(!a||!b){epShowErr(errEl,'Formato de No. inventario inválido (ej: V-001 o V001).');return null;}
   if(a.serie!==b.serie){epShowErr(errEl,'Los dos equipos deben ser de la misma serie (ej: V).');return null;}
   const numMin=Math.min(a.num,b.num);
   const numMax=Math.max(a.num,b.num);
@@ -370,6 +327,22 @@ function guardarAsigRangoEquipo(){
   renderEquipoPatron();
   if(asignados>0) alert(`${asignados} equipo(s) asignados correctamente a ${ver.nombre}.`);
   else alert('No se asignó ningún equipo (todos del rango ya estaban ocupados).');
+}
+
+/* ── ASIGNAR POR TIPO ── */
+function abrirAsigPorTipo(serie){
+  const items=EQUIPO_PATRON_CATALOG.filter(e=>e.serie===serie);
+  if(!items.length) return;
+  // Serie con un solo equipo: usar modal de asignación individual
+  if(items.length===1){
+    abrirAsigEquipo(items[0].id);
+    return;
+  }
+  // Serie con varios equipos: abrir modal de rango pre-cargado con el rango completo
+  abrirAsigRangoEquipo();
+  document.getElementById('epra-desde').value=items[0].id;
+  document.getElementById('epra-hasta').value=items[items.length-1].id;
+  epraPreview();
 }
 
 /* ── TÍTULOS Y NAVEGACIÓN ── */
