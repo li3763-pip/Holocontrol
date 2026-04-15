@@ -1347,6 +1347,7 @@ function demoDicts(){
       var kh = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
       var scrollEls = document.querySelectorAll('.scroll, .mf-body');
       if (kh > 80) {
+        document.documentElement.style.setProperty('--kbd-h', kh + 'px');
         scrollEls.forEach(function(el){ el.style.paddingBottom = kh + 'px'; });
         if (!kbdOpen) {
           kbdOpen = true;
@@ -1356,6 +1357,7 @@ function demoDicts(){
           }
         }
       } else {
+        document.documentElement.style.setProperty('--kbd-h', '0px');
         scrollEls.forEach(function(el){ el.style.paddingBottom = ''; });
         kbdOpen = false;
       }
