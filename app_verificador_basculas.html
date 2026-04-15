@@ -9,15 +9,15 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0F0E11;--surface:#1A1820;--surface2:#231F2D;--surface3:#2C2838;
-  --border:#332F40;--border2:#443F54;
-  --accent:#C23B6B;--accent2:#8B2D8B;--accent-glow:rgba(194,59,107,.22);
-  --green:#2DB87A;--green-bg:rgba(45,184,122,.12);
-  --amber:#E0A020;--amber-bg:rgba(224,160,32,.12);
-  --red:#E05050;--red-bg:rgba(224,80,80,.12);
-  --blue:#4A9EE0;--blue-bg:rgba(74,158,224,.12);
-  --purple:#9B59B6;--purple-bg:rgba(155,89,182,.12);
-  --text:#F0EDF5;--text2:#A89BB8;--text3:#6B5F7A;
+  --bg:#F4F2F3;--surface:#FFF;--surface2:#F0ECED;--surface3:#E8E3E5;
+  --border:#DDD5D7;--border2:#C4B8BB;
+  --accent:#7B1C3A;--accent2:#5C2D6B;--accent-glow:rgba(123,28,58,.18);
+  --green:#3A6B3A;--green-bg:#E8F5E8;
+  --amber:#7A4A0A;--amber-bg:#FDF0DC;
+  --red:#8B2020;--red-bg:#FDEAEA;
+  --blue:#7B1C3A;--blue-bg:#F5E8EC;
+  --purple:#5C2D6B;--purple-bg:#F0E8F5;
+  --text:#1A1217;--text2:#6B5A5E;--text3:#9C8A8E;
   --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;
   --r:12px;--rsm:8px;
 }
@@ -33,13 +33,13 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 
 /* ── LOGIN ── */
 #sc-login{background:var(--bg);align-items:center;justify-content:center;padding:32px 28px;gap:0}
-.lg-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:280px;height:280px;background:radial-gradient(circle,rgba(194,59,107,.16) 0%,transparent 70%);pointer-events:none}
+.lg-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:280px;height:280px;background:radial-gradient(circle,rgba(123,28,58,.12) 0%,transparent 70%);pointer-events:none}
 .lg-icon{width:62px;height:62px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:17px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 0 36px var(--accent-glow)}
 .lg-icon svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:1.8}
 .lg-title{font-size:22px;font-weight:700;letter-spacing:-.02em;text-align:center}
 .lg-title span{color:var(--accent)}
 .lg-sub{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin:4px 0 32px;text-align:center}
-.lg-nom{background:rgba(74,158,224,.08);border:1px solid rgba(74,158,224,.2);border-radius:6px;padding:6px 12px;font-size:10px;color:var(--blue);letter-spacing:.05em;text-align:center;margin-bottom:28px}
+.lg-nom{background:rgba(123,28,58,.06);border:1px solid rgba(123,28,58,.18);border-radius:6px;padding:6px 12px;font-size:10px;color:var(--blue);letter-spacing:.05em;text-align:center;margin-bottom:28px}
 .lg-form{width:100%;display:flex;flex-direction:column;gap:12px}
 .lg-field{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rsm);padding:13px 15px;display:flex;flex-direction:column;gap:4px;transition:border-color .2s}
 .lg-field:focus-within{border-color:var(--accent)}
@@ -82,7 +82,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 .inv-pill{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center}
 .inv-pill-l{font-size:11px;color:var(--text3);line-height:1.4}
 .inv-pill-v{font-size:20px;font-weight:700}
-.inv-pill.hi{border-color:var(--accent);background:rgba(194,59,107,.06)}.inv-pill.hi .inv-pill-v{color:var(--accent)}
+.inv-pill.hi{border-color:var(--accent);background:rgba(123,28,58,.06)}.inv-pill.hi .inv-pill-v{color:var(--accent)}
 .inv-pill.hg .inv-pill-v{color:var(--green)}
 
 /* ── DICTAMEN ITEM ── */
@@ -158,7 +158,7 @@ textarea.fi{resize:none}
 .nom-table td{border:1px solid var(--border);padding:0}
 .nom-table td input,.nom-table td select{background:transparent;border:none;outline:none;padding:7px 6px;color:var(--text);font-family:var(--sans);font-size:11px;width:100%;text-align:center}
 .nom-table td select{appearance:none;cursor:pointer}
-.nom-table tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+.nom-table tr:nth-child(even) td{background:rgba(0,0,0,.025)}
 .nom-row-num{width:22px;background:var(--surface3);color:var(--text3);font-weight:600;text-align:center;font-size:10px;padding:6px 0 !important}
 
 /* ── DICTAMEN TABLE ── */
@@ -220,7 +220,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
 .ac-drop-item{padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
 .ac-drop-item:last-child{border-bottom:none}
 .ac-drop-item:hover{background:var(--surface2)}
-.nom-badge{display:inline-block;background:rgba(74,158,224,.1);border:1px solid rgba(74,158,224,.3);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.nom-badge{display:inline-block;background:rgba(123,28,58,.08);border:1px solid rgba(123,28,58,.25);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
 
 /* ── INSTRUMENTO CARD ── */
 .instr-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;position:relative}
@@ -244,7 +244,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
 /* ── DESKTOP ── */
 @media(min-width:440px){
   .app{box-shadow:0 0 50px rgba(0,0,0,.6);border-left:1px solid var(--border);border-right:1px solid var(--border)}
-  body{background:#08070A;display:flex;align-items:center;justify-content:center}
+  body{background:#E8E3E5;display:flex;align-items:center;justify-content:center}
 }
 </style>
 </head>
@@ -459,10 +459,10 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
         <label style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="flex-shrink:0">Coordenadas UTM <span id="utm-status" style="font-size:9px;margin-left:4px"></span></span>
           <button type="button" onclick="obtenerUTM()" id="btn-gps"
-            style="background:linear-gradient(135deg,var(--blue),#2d6db5);border:none;border-radius:6px;
+            style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:6px;
                    padding:5px 11px;font-size:10px;font-weight:600;color:#fff;
                    cursor:pointer;display:flex;align-items:center;gap:4px;font-family:var(--sans);
-                   white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(74,158,224,.3)">
+                   white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(123,28,58,.2)">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
             </svg>
