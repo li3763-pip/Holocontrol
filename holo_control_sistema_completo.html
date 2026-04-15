@@ -13,7 +13,7 @@
   --bg:#F4F2F3;--surface:#FFF;--surface2:#F0ECED;
   --border:#DDD5D7;--border2:#C4B8BB;
   --text:#1A1217;--text2:#6B5A5E;--text3:#9C8A8E;
-  --blue:#7B1C3A;--blue-bg:#F5E8EC;
+  --blue:#7B1C2E;--blue-bg:#F5E8EB;
   --green:#3A6B3A;--green-bg:#E8F5E8;
   --amber:#7A4A0A;--amber-bg:#FDF0DC;
   --red:#8B2020;--red-bg:#FDEAEA;
@@ -44,9 +44,10 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 .section{display:none}.section.active{display:block}
 
 /* BUTTONS */
-.btn{padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--sans);transition:all .12s}
-.btn:hover{background:var(--surface2)}
-.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.primary:hover{background:#163F72}
+.btn{padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--sans);transition:transform .15s ease}
+.btn:hover{background:var(--surface2);transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.primary:hover{background:#5C1020}
 .btn.success{background:var(--green);color:#fff;border-color:var(--green)}.btn.success:hover{background:#114F35}
 .btn.warn{background:var(--amber-bg);color:var(--amber);border-color:#E8C97A}
 .btn.sm{padding:4px 10px;font-size:11px}

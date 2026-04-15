@@ -11,11 +11,11 @@
 :root{
   --bg:#F4F2F3;--surface:#FFF;--surface2:#F0ECED;--surface3:#E8E3E5;
   --border:#DDD5D7;--border2:#C4B8BB;
-  --accent:#7B1C3A;--accent2:#5C2D6B;--accent-glow:rgba(123,28,58,.18);
+  --accent:#7B1C2E;--accent2:#5C1020;--accent-glow:rgba(123,28,46,.18);
   --green:#3A6B3A;--green-bg:#E8F5E8;
   --amber:#7A4A0A;--amber-bg:#FDF0DC;
   --red:#8B2020;--red-bg:#FDEAEA;
-  --blue:#7B1C3A;--blue-bg:#F5E8EC;
+  --blue:#7B1C2E;--blue-bg:#F5E8EB;
   --purple:#5C2D6B;--purple-bg:#F0E8F5;
   --text:#1A1217;--text2:#6B5A5E;--text3:#9C8A8E;
   --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;
@@ -33,21 +33,22 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 
 /* ── LOGIN ── */
 #sc-login{background:var(--bg);align-items:center;justify-content:center;padding:32px 28px;gap:0}
-.lg-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:280px;height:280px;background:radial-gradient(circle,rgba(123,28,58,.12) 0%,transparent 70%);pointer-events:none}
+.lg-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:280px;height:280px;background:radial-gradient(circle,rgba(123,28,46,.12) 0%,transparent 70%);pointer-events:none}
 .lg-icon{width:62px;height:62px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:17px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 0 36px var(--accent-glow)}
 .lg-icon svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:1.8}
 .lg-title{font-size:22px;font-weight:700;letter-spacing:-.02em;text-align:center}
 .lg-title span{color:var(--accent)}
 .lg-sub{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin:4px 0 32px;text-align:center}
-.lg-nom{background:rgba(123,28,58,.06);border:1px solid rgba(123,28,58,.18);border-radius:6px;padding:6px 12px;font-size:10px;color:var(--blue);letter-spacing:.05em;text-align:center;margin-bottom:28px}
+.lg-nom{background:rgba(123,28,46,.06);border:1px solid rgba(123,28,46,.18);border-radius:6px;padding:6px 12px;font-size:10px;color:var(--blue);letter-spacing:.05em;text-align:center;margin-bottom:28px}
 .lg-form{width:100%;display:flex;flex-direction:column;gap:12px}
 .lg-field{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rsm);padding:13px 15px;display:flex;flex-direction:column;gap:4px;transition:border-color .2s}
 .lg-field:focus-within{border-color:var(--accent)}
 .lg-field label{font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;font-weight:500}
 .lg-field input{background:none;border:none;outline:none;color:var(--text);font-size:15px;font-family:var(--sans);font-weight:500}
 .lg-field input::placeholder{color:var(--text3)}
-.btn-lg{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--rsm);padding:15px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 18px var(--accent-glow);transition:transform .1s,opacity .15s}
-.btn-lg:active{transform:scale(.98);opacity:.9}
+.btn-lg{background:var(--accent);color:#fff;border:none;border-radius:var(--rsm);padding:15px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 18px var(--accent-glow);transition:transform .15s ease}
+.btn-lg:hover{transform:translateY(-2px)}
+.btn-lg:active{opacity:.85;transform:translateY(0)}
 .lg-err{background:var(--red-bg);border:1px solid var(--red);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--red);display:none;text-align:center}
 
 /* ── TOPBAR ── */
@@ -82,7 +83,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 .inv-pill{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center}
 .inv-pill-l{font-size:11px;color:var(--text3);line-height:1.4}
 .inv-pill-v{font-size:20px;font-weight:700}
-.inv-pill.hi{border-color:var(--accent);background:rgba(123,28,58,.06)}.inv-pill.hi .inv-pill-v{color:var(--accent)}
+.inv-pill.hi{border-color:var(--accent);background:rgba(123,28,46,.06)}.inv-pill.hi .inv-pill-v{color:var(--accent)}
 .inv-pill.hg .inv-pill-v{color:var(--green)}
 
 /* ── DICTAMEN ITEM ── */
@@ -143,10 +144,13 @@ textarea.fi{resize:none}
 .sdot.done{background:var(--green)}
 
 /* ── BTN ── */
-.btn{padding:13px 18px;border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--sans);border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 3px 14px var(--accent-glow);flex:1}
-.btn-p:active{transform:scale(.98)}
+.btn{padding:13px 18px;border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--sans);border:none;cursor:pointer;transition:transform .15s ease;white-space:nowrap}
+.btn-p{background:var(--accent);color:#fff;flex:1}
+.btn-p:hover{transform:translateY(-2px)}
+.btn-p:active{opacity:.85;transform:translateY(0)}
 .btn-g{background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+.btn-g:hover{transform:translateY(-2px)}
+.btn-g:active{transform:translateY(0)}
 .btn:disabled{opacity:.4;pointer-events:none}
 
 /* ── SECTION LABEL ── */
@@ -220,7 +224,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
 .ac-drop-item{padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
 .ac-drop-item:last-child{border-bottom:none}
 .ac-drop-item:hover{background:var(--surface2)}
-.nom-badge{display:inline-block;background:rgba(123,28,58,.08);border:1px solid rgba(123,28,58,.25);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.nom-badge{display:inline-block;background:rgba(123,28,46,.08);border:1px solid rgba(123,28,46,.25);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
 
 /* ── INSTRUMENTO CARD ── */
 .instr-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;position:relative}
@@ -462,7 +466,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
             style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:6px;
                    padding:5px 11px;font-size:10px;font-weight:600;color:#fff;
                    cursor:pointer;display:flex;align-items:center;gap:4px;font-family:var(--sans);
-                   white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(123,28,58,.2)">
+                   white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(123,28,46,.2)">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
             </svg>
