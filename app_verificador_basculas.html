@@ -656,19 +656,19 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
       </div>
       <div class="fgrid">
         <div class="fld">
-          <label>M (Masa patrón)</label>
+          <label>M (Marco)</label>
           <input class="fi mono" id="ep-m" placeholder="ID equipo">
         </div>
         <div class="fld">
-          <label>C (Calibrador)</label>
+          <label>C (Cinco)</label>
           <input class="fi mono" id="ep-c" placeholder="ID equipo">
         </div>
         <div class="fld">
-          <label>D (Dinamómetro)</label>
+          <label>D (Diez)</label>
           <input class="fi mono" id="ep-d" placeholder="ID equipo">
         </div>
         <div class="fld">
-          <label>V (Verificador)</label>
+          <label>V (Veinte)</label>
           <input class="fi mono" id="ep-v" placeholder="ID equipo">
         </div>
       </div>
@@ -1621,7 +1621,7 @@ function openDetail(id){
     </div>
     <div class="card" style="margin-bottom:10px">
       <div class="card-hd">Equipo patrón</div>
-      ${['m:M (Masa)','c:C (Calibrador)','d:D (Dinamómetro)','v:V (Verificador)'].map(p=>{
+      ${['m:M (Marco)','c:C (Cinco)','d:D (Diez)','v:V (Veinte)'].map(p=>{
         const [k,l]=p.split(':');
         return `<div class="irow"><div class="irow-l">${l}</div><div class="irow-v mono">${r.equipoPatron?.[k]||'—'}</div></div>`;
       }).join('')}

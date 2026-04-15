@@ -20,23 +20,29 @@
   function pad2(n){return String(n).padStart(2,'0');}
   function pad3(n){return String(n).padStart(3,'0');}
 
+  // Tipos: M=Marco, C=Cinco, D=Diez, V=Veinte
+  const TIPO_LABEL={M:'Marco',C:'Cinco',D:'Diez',V:'Veinte'};
+  function getTipo(serie){return TIPO_LABEL[serie[0].toUpperCase()]||serie;}
+
   // M01–M15  Clase M1
-  for(let i=1;i<=15;i++) cat.push({id:'M'+pad2(i),clase:'M1',serie:'M'});
+  for(let i=1;i<=15;i++) cat.push({id:'M'+pad2(i),clase:'M1',serie:'M',tipo:'M'});
   // C01–C15  Clase M1
-  for(let i=1;i<=15;i++) cat.push({id:'C'+pad2(i),clase:'M1',serie:'C'});
+  for(let i=1;i<=15;i++) cat.push({id:'C'+pad2(i),clase:'M1',serie:'C',tipo:'C'});
   // D01–D15  Clase M1
-  for(let i=1;i<=15;i++) cat.push({id:'D'+pad2(i),clase:'M1',serie:'D'});
+  for(let i=1;i<=15;i++) cat.push({id:'D'+pad2(i),clase:'M1',serie:'D',tipo:'D'});
   // V001–V600 Clase M1
-  for(let i=1;i<=600;i++) cat.push({id:'V'+pad3(i),clase:'M1',serie:'V'});
+  for(let i=1;i<=600;i++) cat.push({id:'V'+pad3(i),clase:'M1',serie:'V',tipo:'V'});
   // MF01  Clase F2
-  cat.push({id:'MF01',clase:'F2',serie:'MF'});
+  cat.push({id:'MF01',clase:'F2',serie:'MF',tipo:'M'});
   // CF01  Clase F2
-  cat.push({id:'CF01',clase:'F2',serie:'CF'});
+  cat.push({id:'CF01',clase:'F2',serie:'CF',tipo:'C'});
   // DF01  Clase F2
-  cat.push({id:'DF01',clase:'F2',serie:'DF'});
+  cat.push({id:'DF01',clase:'F2',serie:'DF',tipo:'D'});
   // VF01–VF02  Clase F2
-  cat.push({id:'VF01',clase:'F2',serie:'VF'});
-  cat.push({id:'VF02',clase:'F2',serie:'VF'});
+  cat.push({id:'VF01',clase:'F2',serie:'VF',tipo:'V'});
+  cat.push({id:'VF02',clase:'F2',serie:'VF',tipo:'V'});
+
+  window.EQUIPO_PATRON_TIPO_LABEL=TIPO_LABEL;
 
   window.EQUIPO_PATRON_CATALOG=cat;
 })();
@@ -90,7 +96,7 @@ function epParsearId(idStr){
 }
 
 /* ── ESTADO PAGINACIÓN / FILTROS ── */
-const epFilt={texto:'',clase:'',estado:''};
+const epFilt={texto:'',clase:'',estado:'',tipo:''};
 let epPage=1;
 const EP_PAGE_SIZE=50;
 
@@ -104,13 +110,18 @@ function equipoLibre(equipoId){
 }
 
 /* ── RENDER ── */
+const EP_TIPO_ORDER=['M','C','D','V'];
+const EP_TIPO_NAMES={M:'Marco',C:'Cinco',D:'Diez',V:'Veinte'};
+
 function renderEquipoPatron(){
   const texto=(epFilt.texto||'').toLowerCase();
   const clase=epFilt.clase;
   const estado=epFilt.estado;
+  const tipo=epFilt.tipo;
 
   const lista=EQUIPO_PATRON_CATALOG.filter(e=>{
     if(clase&&e.clase!==clase) return false;
+    if(tipo&&e.tipo!==tipo) return false;
     const asig=getAsigEquipo(e.id);
     if(estado==='libre'&&asig) return false;
     if(estado==='asignado'&&!asig) return false;
@@ -136,38 +147,49 @@ function renderEquipoPatron(){
   const btnRango=document.getElementById('ep-btn-rango');
   if(btnRango) btnRango.style.display=canEdit?'':'none';
 
-  const tbody=pagina.map(e=>{
-    const asig=getAsigEquipo(e.id);
-    const estadoChip=asig
-      ?`<span class="chip parcial">Asignado</span>`
-      :`<span class="chip completo">Libre</span>`;
-    const verNombre=asig?`<span style="font-size:12px">${asig.verificadorNombre}</span>`:`<span style="color:var(--text3)">—</span>`;
-    const socioChip=asig?`<span class="chip ${scls(asig.socio)||'p3'}">${INITIALS[asig.socio]||asig.socio}</span>`:`<span style="color:var(--text3)">—</span>`;
-    const claseChip=e.clase==='M1'
-      ?`<span class="tipo-badge t-s1">M1</span>`
-      :`<span class="tipo-badge t-s2">F2</span>`;
-    const fechaStr=asig?`<span style="font-size:10px;color:var(--text3)">${asig.fecha}</span>`:``;
-    const diasHtml=asig?epDiasLabel(asig.dias):`<span style="color:var(--text3)">—</span>`;
-    let acciones='—';
-    if(canEdit){
-      if(asig){
-        // Socio solo puede liberar equipos de sus propios verificadores
-        const puedeLiberar=SESSION.rol==='admin'||SESSION.rol==='personal'||(SESSION.rol==='socio'&&asig.socio===SESSION.socio);
-        acciones=puedeLiberar?`<button class="btn sm ghost" style="color:var(--red)" onclick="confirmarLiberarEquipo('${e.id}')">Liberar</button>`:'—';
-      } else {
-        acciones=`<button class="btn sm primary" onclick="abrirAsigEquipo('${e.id}')">Asignar</button>`;
+  // Agrupar por tipo manteniendo el orden M→C→D→V
+  const grupos={};
+  EP_TIPO_ORDER.forEach(t=>{grupos[t]=[];});
+  pagina.forEach(e=>{if(grupos[e.tipo]) grupos[e.tipo].push(e);});
+
+  let tbody='';
+  EP_TIPO_ORDER.forEach(t=>{
+    const items=grupos[t];
+    if(!items||items.length===0) return;
+    tbody+=`<tr><td colspan="7" style="background:var(--surface2,#f4f4f5);padding:4px 10px;font-size:11px;font-weight:700;color:var(--text2);border-top:2px solid var(--border,#e4e4e7);letter-spacing:.5px">${t} — ${EP_TIPO_NAMES[t]} <span style="font-weight:400;color:var(--text3)">(${items.length})</span></td></tr>`;
+    items.forEach(e=>{
+      const asig=getAsigEquipo(e.id);
+      const estadoChip=asig
+        ?`<span class="chip parcial">Asignado</span>`
+        :`<span class="chip completo">Libre</span>`;
+      const verNombre=asig?`<span style="font-size:12px">${asig.verificadorNombre}</span>`:`<span style="color:var(--text3)">—</span>`;
+      const socioChip=asig?`<span class="chip ${scls(asig.socio)||'p3'}">${INITIALS[asig.socio]||asig.socio}</span>`:`<span style="color:var(--text3)">—</span>`;
+      const claseChip=e.clase==='M1'
+        ?`<span class="tipo-badge t-s1">M1</span>`
+        :`<span class="tipo-badge t-s2">F2</span>`;
+      const fechaStr=asig?`<span style="font-size:10px;color:var(--text3)">${asig.fecha}</span>`:``;
+      const diasHtml=asig?epDiasLabel(asig.dias):`<span style="color:var(--text3)">—</span>`;
+      let acciones='—';
+      if(canEdit){
+        if(asig){
+          // Socio solo puede liberar equipos de sus propios verificadores
+          const puedeLiberar=SESSION.rol==='admin'||SESSION.rol==='personal'||(SESSION.rol==='socio'&&asig.socio===SESSION.socio);
+          acciones=puedeLiberar?`<button class="btn sm ghost" style="color:var(--red)" onclick="confirmarLiberarEquipo('${e.id}')">Liberar</button>`:'—';
+        } else {
+          acciones=`<button class="btn sm primary" onclick="abrirAsigEquipo('${e.id}')">Asignar</button>`;
+        }
       }
-    }
-    return`<tr>
-      <td style="font-family:var(--mono);font-weight:500">${e.id}</td>
-      <td>${claseChip}</td>
-      <td>${estadoChip}</td>
-      <td>${verNombre}<br>${fechaStr}</td>
-      <td>${socioChip}</td>
-      <td style="white-space:normal">${diasHtml}</td>
-      <td>${acciones}</td>
-    </tr>`;
-  }).join('');
+      tbody+=`<tr>
+        <td style="font-family:var(--mono);font-weight:500">${e.id}</td>
+        <td>${claseChip}</td>
+        <td>${estadoChip}</td>
+        <td>${verNombre}<br>${fechaStr}</td>
+        <td>${socioChip}</td>
+        <td style="white-space:normal">${diasHtml}</td>
+        <td>${acciones}</td>
+      </tr>`;
+    });
+  });
 
   document.getElementById('ep-tbody').innerHTML=tbody||`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Sin resultados.</td></tr>`;
 
@@ -184,6 +206,7 @@ function epFiltrar(){
   epFilt.texto=document.getElementById('ep-filt-texto').value||'';
   epFilt.clase=document.getElementById('ep-filt-clase').value||'';
   epFilt.estado=document.getElementById('ep-filt-estado').value||'';
+  epFilt.tipo=document.getElementById('ep-filt-tipo').value||'';
   epPage=1;
   renderEquipoPatron();
 }
