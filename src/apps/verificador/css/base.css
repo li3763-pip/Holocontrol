@@ -17,7 +17,7 @@
 
 html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);overflow:hidden;font-size:14px}
 
-.app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;height:100svh;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
 
 
 /* NOISE */

@@ -1325,10 +1325,18 @@ function demoDicts(){
 
 // ── Teclado suave: evitar salto al abrir el teclado ──
 (function(){
-  // Fija --app-h al alto del viewport de layout (no cambia cuando abre el teclado)
+  // Fija --app-h al alto del viewport de layout una sola vez.
+  // No se actualiza en cada resize para evitar el salto cuando la barra
+  // de direcciones aparece/desaparece (ese salto era el "brincado").
   function setAppH(){ document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
   setAppH();
-  window.addEventListener('resize', setAppH);
+  // Solo actualizar en cambios grandes (rotación de pantalla), no en los
+  // pequeños que produce la barra de navegación del navegador.
+  var _lastH = window.innerHeight;
+  window.addEventListener('resize', function(){
+    var h = window.innerHeight;
+    if (Math.abs(h - _lastH) > 100) { _lastH = h; setAppH(); }
+  });
 
   if (!window.visualViewport) return;
   var kbdOpen = false;
