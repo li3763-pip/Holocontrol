@@ -669,37 +669,67 @@ function eliminarInstr(idx){
 }
 
 /* ══ DICTAMEN: cards por instrumento en paso 3 ══ */
+function tipoStr(t){ return t==='M'?'Mecánico':t==='E'?'Electrónico':t==='H'?'Híbrido':t; }
+
 function syncDictRows(){
-  const tbody=document.getElementById('dict-rows');
-  if(!tbody) return;
+  const container=document.getElementById('dict-cards-container');
+  if(!container) return;
   if(!instrBuffer.length){
-    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--text3);font-size:11px">Sin instrumentos registrados</td></tr>`;
+    container.innerHTML=`<div style="text-align:center;padding:16px;color:var(--text3);font-size:11px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)">Sin instrumentos registrados</div>`;
     return;
   }
-  tbody.innerHTML=instrBuffer.map((ins,i)=>`<tr>
-    <td class="nom-row-num">${i+1}</td>
-    <td>${dictSel('dv-'+i)}</td>
-    <td>${dictSel('de-'+i)}</td>
-    <td>${dictSel('dr-'+i)}</td>
-    <td>${dictSel('dx-'+i)}</td>
-    <td>${dictSel('dc-'+i)}</td>
-  </tr>`).join('');
+  const checkFields=[
+    {id:'dv',lbl:'Insp. Visual'},
+    {id:'de',lbl:'Exactitud'},
+    {id:'dr',lbl:'Repetibilidad'},
+    {id:'dx',lbl:'Excentricidad'},
+  ];
+  container.innerHTML=instrBuffer.map((ins,i)=>`
+    <div class="dict-card">
+      <div class="dict-card-hd">
+        <div class="instr-num">${i+1}</div>
+        <div class="dict-card-name">${ins.marca||'—'}${ins.modelo?' '+ins.modelo:''}</div>
+        ${ins.tipo?`<div class="dict-card-sub">${tipoStr(ins.tipo)}</div>`:''}
+      </div>
+      <div class="dict-checks-grid">
+        ${checkFields.map(f=>`
+          <div class="dict-check-fld">
+            <div class="dict-check-lbl">${f.lbl}</div>
+            <div class="dict-btn-group" id="${f.id}g-${i}">
+              ${['C','NC','NA'].map(v=>`<button type="button" class="dict-btn" data-val="${v}" onclick="setDictVal('${f.id}-${i}','${v}')">${v}</button>`).join('')}
+            </div>
+            <input type="hidden" id="${f.id}-${i}" value="">
+          </div>
+        `).join('')}
+      </div>
+      <div class="dict-result-fld">
+        <div class="dict-check-lbl">Cumple NOM-010</div>
+        <div class="dict-btn-group dict-btn-group-result" id="dcg-${i}">
+          <button type="button" class="dict-btn dict-btn-result" data-val="C"  onclick="setDictVal('dc-${i}','C')">✓ Cumple</button>
+          <button type="button" class="dict-btn dict-btn-result" data-val="NC" onclick="setDictVal('dc-${i}','NC')">✗ No Cumple</button>
+          <button type="button" class="dict-btn dict-btn-result" data-val="NA" onclick="setDictVal('dc-${i}','NA')">— NA</button>
+        </div>
+        <input type="hidden" id="dc-${i}" value="">
+      </div>
+    </div>
+  `).join('');
 }
 
-function dictSel(id){
-  return `<select id="${id}" onchange="autoNC(this,'${id}')">
-    <option value="">—</option><option value="C">C</option><option value="NC">NC</option><option value="NA">NA</option>
-  </select>`;
-}
-
-function autoNC(sel,id){
-  // Insp. visual NC → Cumple NOM = NC
-  const parts=id.split('-');
-  const idx=parts[1];
-  if(id.startsWith('dv-') && sel.value==='NC'){
-    const dc=document.getElementById('dc-'+idx);
-    if(dc) dc.value='NC';
+function setDictVal(id, val){
+  const input=document.getElementById(id);
+  if(!input) return;
+  input.value=val;
+  // Derive group element id: dv-0 → dvg-0, dc-0 → dcg-0
+  const grpId=id.replace(/^([^-]+)-/,'$1g-');
+  const grp=document.getElementById(grpId);
+  if(grp){
+    grp.querySelectorAll('.dict-btn').forEach(btn=>{
+      btn.classList.remove('sel-c','sel-nc','sel-na');
+      if(btn.dataset.val===val) btn.classList.add(val==='C'?'sel-c':val==='NC'?'sel-nc':'sel-na');
+    });
   }
+  // autoNC: Insp. Visual NC → Cumple NOM-010 = NC
+  if(id.startsWith('dv-') && val==='NC') setDictVal('dc-'+id.split('-')[1],'NC');
 }
 
 /* ══ HOLOGRAMAS: uno por instrumento ══ */
