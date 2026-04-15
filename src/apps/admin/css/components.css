@@ -1,12 +1,14 @@
 
 
 /* BUTTONS */
-.btn{padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--sans)}
+.btn{padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--sans);transition:transform .15s ease}
 
-.btn:hover{background:var(--surface2)}
+.btn:hover{background:var(--surface2);transform:translateY(-2px)}
+
+.btn:active{transform:translateY(0)}
 
 .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn.primary:hover{background:#163F72}
+.btn.primary:hover{background:#5C1020}
 
 .btn.success{background:var(--green);color:#fff;border-color:var(--green)}
 .btn.success:hover{background:#114F35}
@@ -191,7 +193,7 @@ tr.row:hover{background:var(--surface2);cursor:pointer}
 
 
 /* INFO BOXES */
-.info-box{border-left:3px solid var(--blue);padding:8px 12px;font-size:11px;border-radius:0 6px 6px 0;margin-bottom:14px;background:var(--blue-bg);color:#2A5A96}
+.info-box{border-left:3px solid var(--blue);padding:8px 12px;font-size:11px;border-radius:0 6px 6px 0;margin-bottom:14px;background:var(--blue-bg);color:#5C1020}
 
 .warn-box{border-left:3px solid var(--amber);padding:8px 12px;font-size:11px;border-radius:0 6px 6px 0;margin-bottom:10px;background:var(--amber-bg);color:var(--amber);display:none}
 
@@ -201,13 +203,13 @@ tr.row:hover{background:var(--surface2);cursor:pointer}
 
 .precio-box-val{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--green)}
 
-.pendiente-box{background:var(--blue-bg);border:1px solid #9EC5F0;border-radius:6px;padding:12px 14px;margin-bottom:14px;display:none}
+.pendiente-box{background:var(--blue-bg);border:1px solid #D9909D;border-radius:6px;padding:12px 14px;margin-bottom:14px;display:none}
 
-.pend-socio-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(27,79,138,.08);font-size:11px}
+.pend-socio-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(123,28,46,.08);font-size:11px}
 
 .pend-socio-row:last-child{border-bottom:none}
 
-.pend-bar-wrap{flex:1;margin:0 10px;background:rgba(27,79,138,.12);height:5px;border-radius:3px;overflow:hidden}
+.pend-bar-wrap{flex:1;margin:0 10px;background:rgba(123,28,46,.12);height:5px;border-radius:3px;overflow:hidden}
 
 .divider{height:1px;background:var(--border);margin:14px 0}
 
