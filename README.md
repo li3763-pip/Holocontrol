@@ -58,6 +58,40 @@ Agregar al inicio del celular:
 | verif2  | campo123   | Laura Mendoza  | Zona Sur     |
 | verif3  | campo123   | Héctor Sosa    | Zona Centro  |
 
+## Cómo generar el APK (Android)
+
+La app es una PWA (Progressive Web App). La forma más sencilla de obtener un APK es mediante **PWABuilder** o **Bubblewrap**, que envuelven la PWA en una TWA (Trusted Web Activity).
+
+### Opción A — PWABuilder (sin instalar nada)
+
+1. Asegúrate de que GitHub Pages esté habilitado para el repositorio.  
+   URL pública: `https://li3763-pip.github.io/Holocontrol/src/apps/verificador/index.html`
+2. Entra a **https://www.pwabuilder.com** desde la PC.
+3. Pega la URL de GitHub Pages y haz clic en **Start**.
+4. Descarga el paquete Android → genera el APK firmado listo para instalar.
+
+### Opción B — Bubblewrap (línea de comandos)
+
+Requiere Node.js ≥ 14 y Android SDK.
+
+```bash
+npm install -g @bubblewrap/cli
+bubblewrap init --manifest https://li3763-pip.github.io/Holocontrol/src/apps/verificador/manifest.json
+bubblewrap build
+```
+
+El APK queda en `app-release-signed.apk`.
+
+### Requisito: assetlinks.json
+
+Para que la TWA funcione sin la barra de Chrome, hay que agregar el fingerprint SHA-256 del keystore en:
+
+`https://li3763-pip.github.io/.well-known/assetlinks.json`
+
+PWABuilder y Bubblewrap generan este archivo automáticamente durante el proceso.
+
+---
+
 ## Tareas pendientes
 
 - Vincular la app del verificador con el panel web (#1)
