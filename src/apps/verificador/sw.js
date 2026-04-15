@@ -46,7 +46,7 @@ self.addEventListener('fetch', function(e){
     caches.match(e.request).then(function(cached){
       return cached || fetch(e.request).then(function(response){
         // No cachear respuestas de error
-        if (!response || response.status !== 200 || response.type === 'opaque') {
+        if (!response || response.status !== 200) {
           return response;
         }
         var clone = response.clone();
