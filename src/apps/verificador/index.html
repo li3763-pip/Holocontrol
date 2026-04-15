@@ -185,12 +185,31 @@
       <div class="fgrid">
         <div class="fld">
           <label>Giro</label>
-          <select class="fi" id="nd-giro">
+          <select class="fi" id="nd-giro" onchange="onGiroChange(this.value)">
             <option value="">Seleccionar</option>
-            <option>Comercio</option><option>Industria</option><option>Salud</option>
-            <option>Transporte</option><option>Agropecuario</option><option>Servicios</option>
-            <option>Laboratorio</option><option>Otro</option>
+            <option>Abarrotes</option>
+            <option>Miscelánea</option>
+            <option>Dulcería</option>
+            <option>Carnicería</option>
+            <option>Vísceras</option>
+            <option>Pollería</option>
+            <option>Verdulería</option>
+            <option>Frutería</option>
+            <option>Semillas y chiles secos</option>
+            <option>Desperdicio Industrial/Chatarrera</option>
+            <option>Joyería</option>
+            <option>Empeños</option>
+            <option>Tortillería/Molino</option>
+            <option>Materias Primas</option>
+            <option>Taquería</option>
+            <option>Ferretería/Tlapalería/Metales</option>
+            <option>Casa de Materiales</option>
+            <option>Paquetería</option>
+            <option>Lavandería/Tintorería</option>
+            <option>Pescados y mariscos</option>
+            <option value="Otro">Otro</option>
           </select>
+          <input class="fi" id="nd-giro-otro" placeholder="Especifica el giro" style="display:none;margin-top:6px">
         </div>
         <div class="fld">
           <label>Fecha solicitud</label>
