@@ -427,6 +427,13 @@ function closeNuevo(){
   resetNuevo();
 }
 
+function onGiroChange(val){
+  const otro=document.getElementById('nd-giro-otro');
+  if(!otro) return;
+  otro.style.display = val==='Otro' ? '' : 'none';
+  if(val!=='Otro') otro.value='';
+}
+
 function resetNuevo(){
   instrBuffer=[];
   // Reiniciar UI de equipo patrón (modo rango → único) antes de limpiar valores
@@ -439,6 +446,7 @@ function resetNuevo(){
   ['nd-giro','nd-entidad','if-tipo','if-periodo','if-clase','if-ipe'].forEach(id=>{
     const e=document.getElementById(id); if(e) e.value='';
   });
+  onGiroChange('');
   ['marca-drop','modelo-drop'].forEach(id=>{
     const e=document.getElementById(id); if(e) e.style.display='none';
   });
@@ -832,7 +840,7 @@ function guardarRegistro(){
   const nuevo={
     id:'R'+Date.now(),
     razonSocial:document.getElementById('nd-razon').value.trim(),
-    giro:document.getElementById('nd-giro').value,
+    giro:(()=>{ const g=document.getElementById('nd-giro').value; return g==='Otro'?(document.getElementById('nd-giro-otro')?.value.trim()||'Otro'):g; })(),
     fechaSol:document.getElementById('nd-fecha-sol').value,
     calle:document.getElementById('nd-calle').value,
     municipio:document.getElementById('nd-muni').value,
