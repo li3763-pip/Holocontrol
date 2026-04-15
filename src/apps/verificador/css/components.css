@@ -35,7 +35,7 @@
 
 .inv-pill-v{font-size:20px;font-weight:700}
 
-.inv-pill.hi{border-color:var(--accent);background:rgba(194,59,107,.06)}
+.inv-pill.hi{border-color:var(--accent);background:rgba(123,28,58,.06)}
 .inv-pill.hi .inv-pill-v{color:var(--accent)}
 
 .inv-pill.hg .inv-pill-v{color:var(--green)}
@@ -124,7 +124,7 @@ textarea.fi{resize:none}
 
 .nom-table td select{appearance:none;cursor:pointer}
 
-.nom-table tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+.nom-table tr:nth-child(even) td{background:rgba(0,0,0,.025)}
 
 .nom-row-num{width:22px;background:var(--surface3);color:var(--text3);font-weight:600;text-align:center;font-size:10px;padding:6px 0 !important}
 
@@ -231,7 +231,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
 
 .ac-drop-item:hover{background:var(--surface2)}
 
-.nom-badge{display:inline-block;background:rgba(74,158,224,.1);border:1px solid rgba(74,158,224,.3);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.nom-badge{display:inline-block;background:rgba(123,28,58,.08);border:1px solid rgba(123,28,58,.25);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
 
 
 /* ── INSTRUMENTO CARD ── */
@@ -273,5 +273,5 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
 /* ── DESKTOP ── */
 @media(min-width:440px){
   .app{box-shadow:0 0 50px rgba(0,0,0,.6);border-left:1px solid var(--border);border-right:1px solid var(--border)}
-  body{background:#08070A;display:flex;align-items:center;justify-content:center}
+  body{background:#E8E3E5;display:flex;align-items:center;justify-content:center}
 }
