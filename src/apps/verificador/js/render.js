@@ -408,6 +408,60 @@ function buildNomRows(){ instrBuffer=[]; renderInstrList(); }
 function buildDictRows(){ syncDictRows(); }
 function buildHoloRows(){ syncHoloRows(); }
 
+/* ══ FOLIO AUTO-ASIGNACIÓN ══ */
+function _parseRange(rangeStr){
+  if(!rangeStr||rangeStr==='—') return null;
+  const [a]=rangeStr.split('→');
+  const m=a.trim().match(/^([A-Za-z]+)(\d+)$/);
+  if(!m) return null;
+  return {prefix:m[1], start:parseInt(m[2]), padLen:m[2].length};
+}
+
+function _countUsedInRegistros(tipo){
+  return registros.reduce((acc,reg)=>acc+(reg.instrumentos||[]).filter(i=>i.holoTipo===tipo).length,0);
+}
+
+function _countUVAInRegistros(){
+  return registros.reduce((acc,reg)=>acc+(reg.instrumentos||[]).filter(i=>!!i.holoU).length,0);
+}
+
+/* Recomputa y rellena los campos de folio PROFECO y UVA para todas las filas visibles */
+function computeHoloFolios(){
+  const n=instrBuffer.length;
+  if(!n) return;
+  const usedS1=_countUsedInRegistros('S1');
+  const usedS2=_countUsedInRegistros('S2');
+  const usedUVA=_countUVAInRegistros();
+  const rS1=SESSION?_parseRange(SESSION.fs1):null;
+  const rS2=SESSION?_parseRange(SESSION.fs2):null;
+  const rUVA=SESSION?_parseRange(SESSION.fuva):null;
+  let batchS1=0, batchS2=0, batchUVA=0;
+  for(let i=0;i<n;i++){
+    const tipoEl=document.getElementById('ht-'+i);
+    const profEl=document.getElementById('hf-p-'+i);
+    const uvaEl=document.getElementById('hf-u-'+i);
+    if(!tipoEl||!profEl||!uvaEl) continue;
+    const tipo=tipoEl.value;
+    // PROFECO folio
+    if(tipo==='S1'&&rS1){
+      profEl.value=rS1.prefix+String(rS1.start+usedS1+batchS1).padStart(rS1.padLen,'0');
+      batchS1++;
+    } else if(tipo==='S2'&&rS2){
+      profEl.value=rS2.prefix+String(rS2.start+usedS2+batchS2).padStart(rS2.padLen,'0');
+      batchS2++;
+    } else {
+      profEl.value='';
+    }
+    // UVA folio — se asigna cuando hay tipo válido (S1 o S2)
+    if((tipo==='S1'||tipo==='S2')&&rUVA){
+      uvaEl.value=rUVA.prefix+String(rUVA.start+usedUVA+batchUVA).padStart(rUVA.padLen,'0');
+      batchUVA++;
+    } else {
+      uvaEl.value='';
+    }
+  }
+}
+
 /* ── Render lista de instrumentos ya agregados ── */
 function renderInstrList(){
   const c=document.getElementById('instr-list');
@@ -492,7 +546,7 @@ function guardarInstr(){
     periodo: document.getElementById('if-periodo').value,
     // campos de dictamen — se llenan en paso 3
     inspecVisual:'', exactitud:'', repetibilidad:'', excentricidad:'', cumpleNom:'',
-    holoTipo:'', holoProfeco:'', holoU:'', holoUI:'',
+    holoTipo:'', holoProfeco:'', holoU:'',
   });
   document.getElementById('instr-form').style.display='none';
   document.querySelector('.add-instr-btn').style.display='flex';
@@ -558,7 +612,7 @@ function syncHoloRows(){
       <div class="fgrid" style="margin-bottom:6px">
         <div class="fld" style="margin-bottom:0">
           <label>Tipo holograma</label>
-          <select class="fi" id="ht-${i}" style="padding:9px 10px;font-size:12px">
+          <select class="fi" id="ht-${i}" onchange="computeHoloFolios()" style="padding:9px 10px;font-size:12px">
             <option value="">Tipo</option>
             <option value="S1">S1 — Semestral</option>
             <option value="S2">S2 — Anual</option>
@@ -566,21 +620,17 @@ function syncHoloRows(){
           </select>
         </div>
         <div class="fld" style="margin-bottom:0">
-          <label>PROFECO</label>
-          <input class="fi mono" id="hf-p-${i}" placeholder="Nº PROFECO" oninput="this.value=this.value.toUpperCase()" style="padding:9px 10px;font-size:12px">
+          <label>Holograma PROFECO <span style="color:var(--green);font-size:9px;font-weight:600">· auto</span></label>
+          <input class="fi mono" id="hf-p-${i}" readonly placeholder="—" style="padding:9px 10px;font-size:12px;opacity:.8;cursor:default">
         </div>
       </div>
-      <div class="fgrid">
-        <div class="fld" style="margin-bottom:0">
-          <label>U202603</label>
-          <input class="fi mono" id="hf-u-${i}" placeholder="U202603" oninput="this.value=this.value.toUpperCase()" style="padding:9px 10px;font-size:12px">
-        </div>
-        <div class="fld" style="margin-bottom:0">
-          <label>Unidad inspección</label>
-          <input class="fi mono" id="hf-ui-${i}" placeholder="Unidad" oninput="this.value=this.value.toUpperCase()" style="padding:9px 10px;font-size:12px">
-        </div>
+      <div class="fld" style="margin-bottom:0">
+        <label>Folio etiqueta UVA <span style="color:var(--green);font-size:9px;font-weight:600">· auto</span></label>
+        <input class="fi mono" id="hf-u-${i}" readonly placeholder="—" style="padding:9px 10px;font-size:12px;opacity:.8;cursor:default">
       </div>
     </div>`).join('');
+  // Auto-asignar folios después de renderizar
+  computeHoloFolios();
 }
 
 /* ══ RECIBO DE PAGO ══ */
@@ -678,7 +728,6 @@ function guardarRegistro(){
     holoTipo:     document.getElementById('ht-'+i)?.value||'',
     holoProfeco:  document.getElementById('hf-p-'+i)?.value||'',
     holoU:        document.getElementById('hf-u-'+i)?.value||'',
-    holoUI:       document.getElementById('hf-ui-'+i)?.value||'',
   }));
 
   const nuevo={
@@ -720,6 +769,7 @@ function guardarRegistro(){
   instrumentos.forEach(inst=>{
     if(inst.holoTipo==='S1') SESSION.inv.s1=Math.max(0,SESSION.inv.s1-1);
     if(inst.holoTipo==='S2') SESSION.inv.s2=Math.max(0,SESSION.inv.s2-1);
+    if(inst.holoU) SESSION.inv.uva=Math.max(0,SESSION.inv.uva-1);
   });
 
   registros.unshift(nuevo);
@@ -761,7 +811,7 @@ function openDetail(id){
         }).join('')}
       </div>
       <div class="irow" style="margin-top:6px"><div class="irow-l" style="font-weight:700">Cumple NOM-010</div><div class="irow-v ${inst.cumpleNom==='C'?'g':inst.cumpleNom==='NC'?'r':'a'}" style="font-weight:700">${inst.cumpleNom||'—'}</div></div>
-      ${inst.holoProfeco?`<div class="irow"><div class="irow-l">Holograma</div><div class="irow-v mono" style="font-size:10px">${inst.holoTipo||''} · PROFECO: ${inst.holoProfeco||'—'} · ${inst.holoU||'—'}</div></div>`:''}
+      ${inst.holoProfeco?`<div class="irow"><div class="irow-l">Holograma</div><div class="irow-v mono" style="font-size:10px">${inst.holoTipo||''} · PROFECO: ${inst.holoProfeco||'—'}${inst.holoU?' · UVA: '+inst.holoU:''}</div></div>`:''}
     </div>`;
   });
 
@@ -1240,7 +1290,7 @@ function demoDicts(){
         { no:1,tipo:'E',marca:'OHAUS',modelo:'Defender 3000',serie:'B234556',max:'300',e:'100',
           clasExact:'III',prototipo:'',dgn:'',periodo:'S',ipe:'P',
           inspecVisual:'C',exactitud:'C',repetibilidad:'C',excentricidad:'NC',cumpleNom:'NC',
-          holoTipo:'S1',holoProfeco:'P12345',holoU:'U202603',holoUI:'UI-001' }
+          holoTipo:'S1',holoProfeco:'S10000100',holoU:'UVA26001' }
       ],
       equipoPatron:{m:'MP-01',c:'',d:'',v:'VI-2024'},
       pago:{sub:'850.00',iva:'136.00',total:'986.00'},
@@ -1255,7 +1305,7 @@ function demoDicts(){
         { no:1,tipo:'M',marca:'FAIRBANKS',modelo:'FM-200',serie:'FM20019001',max:'2000',e:'500',
           clasExact:'IIII',prototipo:'',dgn:'',periodo:'A',ipe:'P',
           inspecVisual:'C',exactitud:'C',repetibilidad:'C',excentricidad:'C',cumpleNom:'C',
-          holoTipo:'S2',holoProfeco:'P23456',holoU:'U202603',holoUI:'UI-002' }
+          holoTipo:'S2',holoProfeco:'S20000050',holoU:'UVA26002' }
       ],
       equipoPatron:{m:'MP-01',c:'C-007',d:'',v:'VI-2024'},
       pago:{sub:'1200.00',iva:'192.00',total:'1392.00'},
