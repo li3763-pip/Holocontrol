@@ -1065,6 +1065,7 @@ function go(id){
     }
     renderVerificadores();
   }
+  if(id==='equipo-patron') renderEquipoPatron();
   if(window.innerWidth<=700)closeSidebar();
 }
 

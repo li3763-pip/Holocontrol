@@ -63,6 +63,7 @@
   <div class="nav" onclick="go('transferencias')" data-section="transferencias"><svg viewBox="0 0 16 16"><path d="M2 8h12M10 4l4 4-4 4M14 8"/><path d="M6 4L2 8l4 4" opacity=".5"/></svg>Transferencias</div>
   <div class="nav-group">Catálogos</div>
   <div class="nav" onclick="go('verificadores')" data-section="verificadores"><svg viewBox="0 0 16 16"><circle cx="5" cy="4" r="2.5"/><path d="M1 13c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5"/><path d="M11 7l1.5 1.5L15 6" stroke-width="1.5"/><circle cx="12" cy="4" r="2" opacity=".6"/></svg>Equipo de trabajo</div>
+  <div class="nav" onclick="go('equipo-patron')" data-section="equipo-patron"><svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M5 8h6M5 11h4"/></svg>Equipo patrón</div>
   <div class="nav" onclick="go('socios')" data-section="socios"><svg viewBox="0 0 16 16"><circle cx="5" cy="5" r="2.5"/><circle cx="11" cy="5" r="2.5"/><path d="M1 14c0-2.5 1.8-4 4-4s4 1.5 4 4"/><path d="M11 10c2.2 0 4 1.5 4 4"/></svg>Socios</div>
   <div class="nav" onclick="go('proveedores')" data-section="proveedores"><svg viewBox="0 0 16 16"><rect x="1" y="6" width="14" height="8" rx="1"/><path d="M4 6V4a4 4 0 0 1 8 0v2"/></svg>Proveedores</div>
   <div id="nav-admin-group" class="nav-group">Administración</div>
@@ -356,9 +357,103 @@
   <div id="ver-cards" class="two-col" style="gap:14px"></div>
 </div>
 
+<!-- ═══════════════════ SECCIÓN: EQUIPO PATRÓN ═══════════════════ -->
+<div id="sec-equipo-patron" class="section">
+  <div class="sec-actions">
+    <span style="font-size:11px;color:var(--text3)">Asigna un equipo desde la tabla.</span>
+  </div>
+
+  <!-- Métricas -->
+  <div class="metrics" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px">
+    <div class="metric">
+      <div class="metric-lbl">Total de equipos</div>
+      <div class="metric-val" id="ep-metric-total">—</div>
+      <div class="metric-sub">en catálogo</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Asignados</div>
+      <div class="metric-val" id="ep-metric-asignados" style="color:var(--blue)">—</div>
+      <div class="metric-sub">a verificadores</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Libres</div>
+      <div class="metric-val" id="ep-metric-libres" style="color:var(--green)">—</div>
+      <div class="metric-sub">disponibles</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="toolbar" style="margin-bottom:14px">
+    <input class="si stretch" placeholder="Buscar no. inventario o verificador..." id="ep-filt-texto" oninput="epFiltrar()">
+    <select class="si" id="ep-filt-clase" onchange="epFiltrar()">
+      <option value="">Todas las clases</option>
+      <option value="M1">Clase M1</option>
+      <option value="F2">Clase F2</option>
+    </select>
+    <select class="si" id="ep-filt-estado" onchange="epFiltrar()">
+      <option value="">Todos los estados</option>
+      <option value="libre">Solo libres</option>
+      <option value="asignado">Solo asignados</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:110px">No. Inventario</th>
+          <th style="width:120px">Clase de exactitud</th>
+          <th style="width:100px">Estado</th>
+          <th>Verificador</th>
+          <th style="width:80px">Socio</th>
+          <th style="width:100px">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="ep-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px">
+    <span style="font-size:11px;color:var(--text3)" id="ep-pag-info"></span>
+    <button class="btn sm ghost" id="ep-pag-prev" onclick="epPrev()">← Anterior</button>
+    <button class="btn sm ghost" id="ep-pag-next" onclick="epNext()">Siguiente →</button>
+  </div>
+</div>
+
 </div><!-- /body -->
 </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ═══════════════════ MODAL ASIGNAR EQUIPO PATRÓN ═══════════════════ -->
+<div id="modal-equipo-patron-asig" class="modal-bg">
+<div class="modal sm">
+  <h3>Asignar equipo patrón</h3>
+  <input type="hidden" id="epa-equipo-id">
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:14px">
+    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">No. de inventario</div>
+    <div style="font-size:14px;font-weight:600;font-family:var(--mono);color:var(--blue)" id="epa-equipo-info">—</div>
+  </div>
+  <div class="fgrid">
+    <div class="fg" style="grid-column:span 2">
+      <label class="fl">Verificador</label>
+      <select class="fi" id="epa-verificador">
+        <option value="">Seleccionar verificador...</option>
+      </select>
+    </div>
+    <div class="fg" style="grid-column:span 2">
+      <label class="fl">Fecha de asignación</label>
+      <input class="fi" type="date" id="epa-fecha">
+    </div>
+  </div>
+  <div id="epa-err" style="display:none" class="err-box"></div>
+  <div class="modal-btns">
+    <button class="btn ghost" onclick="closeModal('modal-equipo-patron-asig')">Cancelar</button>
+    <button class="btn primary" onclick="guardarAsigEquipo()">Asignar</button>
+  </div>
+</div>
+</div>
 
 <!-- ═══════════════════ MODAL PIN ═══════════════════ -->
 <div id="modal-pin" class="modal-bg">
@@ -859,5 +954,6 @@
 <script src="js/proveedores.js"></script>
 <script src="js/papeleria.js"></script>
 <script src="js/usuarios.js"></script>
+<script src="js/equipo_patron.js"></script>
 </body>
 </html>
