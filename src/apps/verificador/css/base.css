@@ -4,11 +4,11 @@
 :root{
   --bg:#F4F2F3;--surface:#FFF;--surface2:#F0ECED;--surface3:#E8E3E5;
   --border:#DDD5D7;--border2:#C4B8BB;
-  --accent:#7B1C3A;--accent2:#5C2D6B;--accent-glow:rgba(123,28,58,.18);
+  --accent:#1D5BA6;--accent2:#1444B8;--accent-glow:rgba(29,91,166,.18);
   --green:#3A6B3A;--green-bg:#E8F5E8;
   --amber:#7A4A0A;--amber-bg:#FDF0DC;
   --red:#8B2020;--red-bg:#FDEAEA;
-  --blue:#7B1C3A;--blue-bg:#F5E8EC;
+  --blue:#1D5BA6;--blue-bg:#E8F0FB;
   --purple:#5C2D6B;--purple-bg:#F0E8F5;
   --text:#1A1217;--text2:#6B5A5E;--text3:#9C8A8E;
   --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;

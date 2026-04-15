@@ -1,7 +1,7 @@
 
-.btn-lg{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--rsm);padding:15px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 18px var(--accent-glow);transition:transform .1s,opacity .15s}
+.btn-lg{background:var(--accent);color:#fff;border:none;border-radius:var(--rsm);padding:15px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
 
-.btn-lg:active{transform:scale(.98);opacity:.9}
+.btn-lg:active{opacity:.85}
 
 
 /* ── CARDS ── */
@@ -35,7 +35,7 @@
 
 .inv-pill-v{font-size:20px;font-weight:700}
 
-.inv-pill.hi{border-color:var(--accent);background:rgba(123,28,58,.06)}
+.inv-pill.hi{border-color:var(--accent);background:rgba(29,91,166,.06)}
 .inv-pill.hi .inv-pill-v{color:var(--accent)}
 
 .inv-pill.hg .inv-pill-v{color:var(--green)}
@@ -98,11 +98,11 @@ textarea.fi{resize:none}
 
 
 /* ── BTN ── */
-.btn{padding:13px 18px;border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--sans);border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn{padding:13px 18px;border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--sans);border:none;cursor:pointer;white-space:nowrap}
 
-.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 3px 14px var(--accent-glow);flex:1}
+.btn-p{background:var(--accent);color:#fff;flex:1}
 
-.btn-p:active{transform:scale(.98)}
+.btn-p:active{opacity:.85}
 
 .btn-g{background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
 
@@ -231,7 +231,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:14px 0}
 
 .ac-drop-item:hover{background:var(--surface2)}
 
-.nom-badge{display:inline-block;background:rgba(123,28,58,.08);border:1px solid rgba(123,28,58,.25);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.nom-badge{display:inline-block;background:rgba(29,91,166,.08);border:1px solid rgba(29,91,166,.25);border-radius:4px;font-size:9px;color:var(--blue);font-weight:600;letter-spacing:.05em;padding:2px 6px;margin-left:6px;vertical-align:middle}
 
 
 /* ── INSTRUMENTO CARD ── */

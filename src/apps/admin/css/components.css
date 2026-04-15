@@ -1,7 +1,7 @@
 
 
 /* BUTTONS */
-.btn{padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--sans);transition:all .12s}
+.btn{padding:6px 14px;font-size:12px;font-weight:500;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--sans)}
 
 .btn:hover{background:var(--surface2)}
 
