@@ -272,6 +272,44 @@ function renderPerf(){
 /* ══════════════════════════════════════════════
    MODAL NUEVO DICTAMEN
 ══════════════════════════════════════════════ */
+/* Quita el estado de solo lectura de los campos de equipo patrón. */
+function resetEquipoPatronFields(){
+  ['m','c','d','v'].forEach(k=>{
+    const el=document.getElementById('ep-'+k);
+    if(el){ el.readOnly=false; el.style.background=''; el.style.cursor=''; el.title=''; }
+  });
+  const nota=document.getElementById('ep-nota');
+  if(nota) nota.style.display='none';
+}
+
+/* Auto-rellena los campos de equipo patrón con los equipos asignados al verificador
+   en el panel admin y los hace de solo lectura. Si un campo no tiene asignación,
+   permanece vacío y editable. */
+function fillEquipoPatron(){
+  if(!SESSION) return;
+  const ep = SESSION.equipoPatron||{};
+  let anyAssigned = false;
+  ['m','c','d','v'].forEach(k=>{
+    const el=document.getElementById('ep-'+k);
+    if(!el) return;
+    if(ep[k]){
+      el.value=ep[k];
+      el.readOnly=true;
+      el.title='Equipo asignado por el panel admin (solo lectura)';
+      el.style.background='var(--surface3,#f4f4f5)';
+      el.style.cursor='not-allowed';
+      anyAssigned=true;
+    } else {
+      el.readOnly=false;
+      el.title='';
+      el.style.background='';
+      el.style.cursor='';
+    }
+  });
+  const nota=document.getElementById('ep-nota');
+  if(nota) nota.style.display=anyAssigned?'block':'none';
+}
+
 function openNuevo(){
   ndStep=1;
   NUM_INSTR=1;
@@ -287,6 +325,7 @@ function openNuevo(){
   goStep(1);
   document.getElementById('mf-nuevo').classList.add('open');
   initGPSonFormOpen();
+  fillEquipoPatron();
 }
 
 function closeNuevo(){
@@ -296,6 +335,8 @@ function closeNuevo(){
 
 function resetNuevo(){
   instrBuffer=[];
+  // Quitar readonly de campos de equipo patrón antes de limpiar
+  resetEquipoPatronFields();
   ['nd-razon','nd-calle','nd-muni','nd-cp','nd-utm','nd-obs','nd-folio-dict',
    'ep-m','ep-c','ep-d','ep-v','nd-apoyo','pago-sub','pago-iva','pago-total',
    'if-marca','if-modelo','if-serie','if-max','if-e','if-dgn-search'].forEach(id=>{
