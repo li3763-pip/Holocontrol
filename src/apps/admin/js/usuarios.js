@@ -1200,10 +1200,10 @@ const UVA_TIPO_IDS=['t1','t2','t3','t4','t5'];
 
 // Folios UVA registrados por tipo: {tipo: Set de números usados}
 let verificadores=[
-  // {id, socio, nombre, tel, email, zona, activo, tipoUsuario, asignaciones:[...]}
-  {id:'VER-001',socio:'Socio A',nombre:'Carlos Méndez',tel:'55 1234-5678',email:'carlos@ejemplo.com',zona:'Zona Norte',activo:true,tipoUsuario:'verificador',asignaciones:[]},
-  {id:'VER-002',socio:'Socio A',nombre:'Laura Ríos',tel:'55 8765-4321',email:'laura@ejemplo.com',zona:'Zona Sur',activo:true,tipoUsuario:'verificador',asignaciones:[]},
-  {id:'VER-003',socio:'Socio B',nombre:'Miguel Torres',tel:'55 5555-1234',email:'miguel@ejemplo.com',zona:'Zona Este',activo:true,tipoUsuario:'inspector',asignaciones:[]},
+  // {id, socio, nombre, tel, email, zona, activo, tipoUsuario, asignaciones:[]}
+  {id:'VER-001',socio:'Socio A',nombre:'Carlos Ramírez',tel:'55 1234-5678',email:'carlos@ejemplo.com',zona:'Zona Norte',activo:true,tipoUsuario:'verificador',asignaciones:[]},
+  {id:'VER-002',socio:'Socio B',nombre:'Laura Mendoza',tel:'55 8765-4321',email:'laura@ejemplo.com',zona:'Zona Sur',activo:true,tipoUsuario:'verificador',asignaciones:[]},
+  {id:'VER-003',socio:'Socio A',nombre:'Héctor Sosa',tel:'55 5555-1234',email:'hector@ejemplo.com',zona:'Zona Centro',activo:true,tipoUsuario:'verificador',asignaciones:[]},
 ];
 let dictamenes=[];
 const DICT_FOLIOS_REG=new Set(); // folios de dictámenes ya registrados

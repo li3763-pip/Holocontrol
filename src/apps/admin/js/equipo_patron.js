@@ -46,6 +46,22 @@
 /* dias: array de strings, e.g. ['lun','mie','vie'] — vacío = todos los días */
 let asignacionesEquipo=[];
 
+/* Clave de localStorage compartida con la app del verificador */
+const EP_LS_KEY='hc_asignaciones_equipo';
+
+function epSaveToStorage(){
+  try{ localStorage.setItem(EP_LS_KEY,JSON.stringify(asignacionesEquipo)); }catch(e){}
+}
+
+function epLoadFromStorage(){
+  try{
+    const raw=localStorage.getItem(EP_LS_KEY);
+    if(raw) asignacionesEquipo=JSON.parse(raw);
+  }catch(e){}
+}
+
+epLoadFromStorage();
+
 /* ── CONSTANTES DÍAS ── */
 const EP_DIAS=[
   {id:'lun',label:'Lun'},
@@ -223,6 +239,7 @@ function guardarAsigEquipo(){
   const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epa-dia-'+d);return cb&&cb.checked;});
 
   asignacionesEquipo.push({equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
+  epSaveToStorage();
   closeModal('modal-equipo-patron-asig');
   renderEquipoPatron();
 }
@@ -237,6 +254,7 @@ function confirmarLiberarEquipo(equipoId){
 
 function liberarEquipo(equipoId){
   asignacionesEquipo=asignacionesEquipo.filter(a=>a.equipoId!==equipoId);
+  epSaveToStorage();
   renderEquipoPatron();
 }
 
@@ -325,6 +343,7 @@ function guardarAsigRangoEquipo(){
     }
   });
   closeModal('modal-equipo-patron-rango');
+  epSaveToStorage();
   renderEquipoPatron();
   if(asignados>0) alert(`${asignados} equipo(s) asignados correctamente a ${ver.nombre}.`);
   else alert('No se asignó ningún equipo (todos del rango ya estaban ocupados).');
