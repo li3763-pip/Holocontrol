@@ -42,8 +42,35 @@
 })();
 
 /* ── ASIGNACIONES ── */
-/* { equipoId, verificadorId, verificadorNombre, socio, fecha } */
+/* { equipoId, verificadorId, verificadorNombre, socio, fecha, dias } */
+/* dias: array de strings, e.g. ['lun','mie','vie'] — vacío = todos los días */
 let asignacionesEquipo=[];
+
+/* ── CONSTANTES DÍAS ── */
+const EP_DIAS=[
+  {id:'lun',label:'Lun'},
+  {id:'mar',label:'Mar'},
+  {id:'mie',label:'Mié'},
+  {id:'jue',label:'Jue'},
+  {id:'vie',label:'Vie'},
+  {id:'sab',label:'Sáb'},
+  {id:'dom',label:'Dom'},
+];
+
+function epDiasLabel(dias){
+  if(!dias||dias.length===0) return '<span style="color:var(--text3);font-size:10px">Todos</span>';
+  return dias.map(d=>{
+    const found=EP_DIAS.find(x=>x.id===d);
+    return`<span class="chip p3" style="font-size:9px;padding:1px 5px;margin:1px">${found?found.label:d}</span>`;
+  }).join('');
+}
+
+function epParsearId(idStr){
+  // Retorna {serie, num} o null si no coincide
+  const m=idStr.match(/^([A-Za-z]+)(\d+)$/);
+  if(!m) return null;
+  return {serie:m[1].toUpperCase(), num:parseInt(m[2],10)};
+}
 
 /* ── ESTADO PAGINACIÓN / FILTROS ── */
 const epFilt={texto:'',clase:'',estado:''};
@@ -89,6 +116,8 @@ function renderEquipoPatron(){
   const pagina=lista.slice(desde,desde+EP_PAGE_SIZE);
 
   const canEdit=SESSION.rol==='admin'||SESSION.rol==='personal'||SESSION.rol==='socio';
+  const btnRango=document.getElementById('ep-btn-rango');
+  if(btnRango) btnRango.style.display=canEdit?'':'none';
 
   const tbody=pagina.map(e=>{
     const asig=getAsigEquipo(e.id);
@@ -101,6 +130,7 @@ function renderEquipoPatron(){
       ?`<span class="tipo-badge t-s1">M1</span>`
       :`<span class="tipo-badge t-s2">F2</span>`;
     const fechaStr=asig?`<span style="font-size:10px;color:var(--text3)">${asig.fecha}</span>`:``;
+    const diasHtml=asig?epDiasLabel(asig.dias):`<span style="color:var(--text3)">—</span>`;
     let acciones='—';
     if(canEdit){
       if(asig){
@@ -117,11 +147,12 @@ function renderEquipoPatron(){
       <td>${estadoChip}</td>
       <td>${verNombre}<br>${fechaStr}</td>
       <td>${socioChip}</td>
+      <td style="white-space:normal">${diasHtml}</td>
       <td>${acciones}</td>
     </tr>`;
   }).join('');
 
-  document.getElementById('ep-tbody').innerHTML=tbody||`<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">Sin resultados.</td></tr>`;
+  document.getElementById('ep-tbody').innerHTML=tbody||`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Sin resultados.</td></tr>`;
 
   // Info paginación
   document.getElementById('ep-pag-info').textContent=`${desde+1}–${Math.min(desde+EP_PAGE_SIZE,lista.length)} de ${lista.length}`;
@@ -166,6 +197,7 @@ function abrirAsigEquipo(equipoId){
 
   document.getElementById('epa-fecha').value=TODAY;
   document.getElementById('epa-err').style.display='none';
+  EP_DIAS.forEach(d=>{const cb=document.getElementById('epa-dia-'+d.id);if(cb)cb.checked=false;});
   openModal('modal-equipo-patron-asig');
 }
 
@@ -187,7 +219,9 @@ function guardarAsigEquipo(){
     err.style.display='block';err.textContent='Solo puedes asignar equipos a tus propios verificadores.';return;
   }
 
-  asignacionesEquipo.push({equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha});
+  const dias=EP_DIAS.map(d=>d.id).filter(d=>document.getElementById('epa-dia-'+d)&&document.getElementById('epa-dia-'+d).checked);
+
+  asignacionesEquipo.push({equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
   closeModal('modal-equipo-patron-asig');
   renderEquipoPatron();
 }
@@ -203,6 +237,94 @@ function confirmarLiberarEquipo(equipoId){
 function liberarEquipo(equipoId){
   asignacionesEquipo=asignacionesEquipo.filter(a=>a.equipoId!==equipoId);
   renderEquipoPatron();
+}
+
+/* ── ASIGNAR POR RANGO ── */
+function abrirAsigRangoEquipo(){
+  const sel=document.getElementById('epra-verificador');
+  sel.innerHTML='<option value="">Seleccionar verificador...</option>';
+  const lista=SESSION.rol==='socio'
+    ? verificadores.filter(v=>v.socio===SESSION.socio&&v.activo)
+    : verificadores.filter(v=>v.activo);
+  lista.forEach(v=>{
+    const opt=document.createElement('option');
+    opt.value=v.id;
+    opt.textContent=`${v.nombre} (${v.socio})`;
+    sel.appendChild(opt);
+  });
+  document.getElementById('epra-desde').value='';
+  document.getElementById('epra-hasta').value='';
+  document.getElementById('epra-fecha').value=TODAY;
+  document.getElementById('epra-preview').style.display='none';
+  document.getElementById('epra-err').style.display='none';
+  EP_DIAS.forEach(d=>{const cb=document.getElementById('epra-dia-'+d.id);if(cb)cb.checked=false;});
+  openModal('modal-equipo-patron-rango');
+}
+
+function epraPreview(){
+  const desde=(document.getElementById('epra-desde').value||'').trim().toUpperCase();
+  const hasta=(document.getElementById('epra-hasta').value||'').trim().toUpperCase();
+  const preview=document.getElementById('epra-preview');
+  const err=document.getElementById('epra-err');
+  err.style.display='none';
+  preview.style.display='none';
+  if(!desde||!hasta) return;
+  const r=epRangoCatalogo(desde,hasta,err);
+  if(!r) return;
+  const libres=r.filter(e=>equipoLibre(e.id));
+  const ocupados=r.length-libres.length;
+  preview.style.display='block';
+  preview.innerHTML=`<strong>${r.length}</strong> equipo(s) en rango: <strong>${libres.length}</strong> libres, <span style="color:var(--amber)">${ocupados} ya asignados (se omitirán)</span>. Rango: ${r[0].id} – ${r[r.length-1].id}`;
+}
+
+function epRangoCatalogo(desdeId,hastaId,errEl){
+  const a=epParsearId(desdeId);
+  const b=epParsearId(hastaId);
+  if(!a||!b){if(errEl){errEl.style.display='block';errEl.textContent='Formato de No. inventario inválido (ej: V233).';}return null;}
+  if(a.serie!==b.serie){if(errEl){errEl.style.display='block';errEl.textContent='Los dos equipos deben ser de la misma serie (ej: V).';}return null;}
+  const numMin=Math.min(a.num,b.num);
+  const numMax=Math.max(a.num,b.num);
+  const items=EQUIPO_PATRON_CATALOG.filter(e=>{
+    const p=epParsearId(e.id);
+    return p&&p.serie===a.serie&&p.num>=numMin&&p.num<=numMax;
+  });
+  if(items.length===0){if(errEl){errEl.style.display='block';errEl.textContent='No se encontraron equipos en ese rango.';}return null;}
+  return items;
+}
+
+function guardarAsigRangoEquipo(){
+  const verId=document.getElementById('epra-verificador').value;
+  const desde=(document.getElementById('epra-desde').value||'').trim().toUpperCase();
+  const hasta=(document.getElementById('epra-hasta').value||'').trim().toUpperCase();
+  const fecha=document.getElementById('epra-fecha').value;
+  const err=document.getElementById('epra-err');
+  err.style.display='none';
+
+  if(!verId){err.style.display='block';err.textContent='Selecciona un verificador.';return;}
+  if(!desde||!hasta){err.style.display='block';err.textContent='Indica el rango de equipos.';return;}
+  if(!fecha){err.style.display='block';err.textContent='Indica la fecha de asignación.';return;}
+
+  const ver=verificadores.find(v=>v.id===verId);
+  if(!ver){err.style.display='block';err.textContent='Verificador no encontrado.';return;}
+  if(SESSION.rol==='socio'&&ver.socio!==SESSION.socio){
+    err.style.display='block';err.textContent='Solo puedes asignar equipos a tus propios verificadores.';return;
+  }
+
+  const items=epRangoCatalogo(desde,hasta,err);
+  if(!items) return;
+
+  const dias=EP_DIAS.map(d=>d.id).filter(d=>document.getElementById('epra-dia-'+d)&&document.getElementById('epra-dia-'+d).checked);
+  let asignados=0;
+  items.forEach(e=>{
+    if(equipoLibre(e.id)){
+      asignacionesEquipo.push({equipoId:e.id,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
+      asignados++;
+    }
+  });
+  closeModal('modal-equipo-patron-rango');
+  renderEquipoPatron();
+  if(asignados>0) alert(`${asignados} equipo(s) asignados correctamente a ${ver.nombre}.`);
+  else alert('No se asignó ningún equipo (todos del rango ya estaban ocupados).');
 }
 
 /* ── TÍTULOS Y NAVEGACIÓN ── */
