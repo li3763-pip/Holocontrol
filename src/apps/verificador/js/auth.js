@@ -18,16 +18,26 @@ const USUARIOS = [
     equipoPatron:{ m:'M03', c:'C02', d:'', v:'V200' } },
 ];
 
-/* Construye equipoPatron desde asignaciones guardadas en localStorage por el panel admin.
-   La clave 'hc_asignaciones_equipo' es escrita por equipo_patron.js del admin.
-   El primer equipo de cada serie encontrado para el verificador es usado.
-   Retorna el objeto { m, c, d, v } actualizado (o el original si no hay datos). */
-function buildEquipoPatronFromStorage(nombre, fallback){
+/* Normaliza un objeto equipoPatron {m,c,d,v} de valores únicos a arrays por tipo. */
+function normalizarEquiposAsignados(ep){
+  const out={m:[],c:[],d:[],v:[]};
+  ['m','c','d','v'].forEach(k=>{
+    if(Array.isArray(ep[k])) out[k]=ep[k].filter(Boolean);
+    else if(ep[k]) out[k]=[ep[k]];
+  });
+  return out;
+}
+
+/* Construye la lista completa de equipos patrón asignados al verificador desde el
+   localStorage escrito por el panel admin (equipo_patron.js).
+   Retorna { m:[…], c:[…], d:[…], v:[…] } con TODOS los equipos asignados por tipo.
+   Si no hay datos en localStorage usa fallbackSingle (objeto {m,c,d,v} de valores únicos). */
+function buildEquiposAsignadosFromStorage(nombre, fallbackSingle){
   try {
     const raw = localStorage.getItem('hc_asignaciones_equipo');
-    if(!raw) return fallback;
+    if(!raw) return normalizarEquiposAsignados(fallbackSingle);
     const asigs = JSON.parse(raw);
-    const ep = { m:'', c:'', d:'', v:'' };
+    const ep = {m:[],c:[],d:[],v:[]};
     let found = false;
     asigs.filter(a=>a.verificadorNombre===nombre).forEach(a=>{
       const seriesMatch = a.equipoId.match(/^([A-Za-z]+)\d/);
@@ -37,10 +47,10 @@ function buildEquipoPatronFromStorage(nombre, fallback){
                 : serie==='C'||serie==='CF' ? 'c'
                 : serie==='D'||serie==='DF' ? 'd'
                 : serie==='V'||serie==='VF' ? 'v' : null;
-      if(key && !ep[key]){ ep[key]=a.equipoId; found=true; }
+      if(key && !ep[key].includes(a.equipoId)){ ep[key].push(a.equipoId); found=true; }
     });
-    return found ? ep : fallback;
-  } catch(e){ return fallback; }
+    return found ? ep : normalizarEquiposAsignados(fallbackSingle);
+  } catch(e){ return normalizarEquiposAsignados(fallbackSingle); }
 }
 
 function doLogin(){
@@ -50,8 +60,15 @@ function doLogin(){
   if(!f){ document.getElementById('l-err').style.display='block'; document.getElementById('l-pass').value=''; return; }
   document.getElementById('l-err').style.display='none';
   SESSION = JSON.parse(JSON.stringify(f)); // copia profunda para mutar inventario sin afectar USUARIOS
-  // Obtener equipo patrón asignado desde el panel admin (localStorage) o usar el predeterminado
-  SESSION.equipoPatron = buildEquipoPatronFromStorage(SESSION.nombre, SESSION.equipoPatron||{m:'',c:'',d:'',v:''});
+  // Obtener todos los equipos patrón asignados (panel admin) o normalizar los predeterminados
+  SESSION.equiposAsignados = buildEquiposAsignadosFromStorage(SESSION.nombre, SESSION.equipoPatron||{m:'',c:'',d:'',v:''});
+  // Mantener equipoPatron (primer equipo de cada tipo) para compatibilidad con la vista de detalle
+  SESSION.equipoPatron = {
+    m: SESSION.equiposAsignados.m[0]||'',
+    c: SESSION.equiposAsignados.c[0]||'',
+    d: SESSION.equiposAsignados.d[0]||'',
+    v: SESSION.equiposAsignados.v[0]||'',
+  };
   const saved = localStorage.getItem('reg_'+u);
   registros = saved ? JSON.parse(saved) : demoDicts();
   initApp();
