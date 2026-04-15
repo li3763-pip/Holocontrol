@@ -61,7 +61,8 @@ function epDiasLabel(dias){
   if(!dias||dias.length===0) return '<span style="color:var(--text3);font-size:10px">Todos</span>';
   return dias.map(d=>{
     const found=EP_DIAS.find(x=>x.id===d);
-    return`<span class="chip p3" style="font-size:9px;padding:1px 5px;margin:1px">${found?found.label:d}</span>`;
+    if(!found) return '';
+    return`<span class="chip p3" style="font-size:9px;padding:1px 5px;margin:1px">${found.label}</span>`;
   }).join('');
 }
 
@@ -219,7 +220,7 @@ function guardarAsigEquipo(){
     err.style.display='block';err.textContent='Solo puedes asignar equipos a tus propios verificadores.';return;
   }
 
-  const dias=EP_DIAS.map(d=>d.id).filter(d=>document.getElementById('epa-dia-'+d)&&document.getElementById('epa-dia-'+d).checked);
+  const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epa-dia-'+d);return cb&&cb.checked;});
 
   asignacionesEquipo.push({equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
   closeModal('modal-equipo-patron-asig');
@@ -270,25 +271,27 @@ function epraPreview(){
   preview.style.display='none';
   if(!desde||!hasta) return;
   const r=epRangoCatalogo(desde,hasta,err);
-  if(!r) return;
+  if(!r||r.length===0) return;
   const libres=r.filter(e=>equipoLibre(e.id));
   const ocupados=r.length-libres.length;
   preview.style.display='block';
   preview.innerHTML=`<strong>${r.length}</strong> equipo(s) en rango: <strong>${libres.length}</strong> libres, <span style="color:var(--amber)">${ocupados} ya asignados (se omitirán)</span>. Rango: ${r[0].id} – ${r[r.length-1].id}`;
 }
 
+function epShowErr(errEl,msg){if(errEl){errEl.style.display='block';errEl.textContent=msg;}}
+
 function epRangoCatalogo(desdeId,hastaId,errEl){
   const a=epParsearId(desdeId);
   const b=epParsearId(hastaId);
-  if(!a||!b){if(errEl){errEl.style.display='block';errEl.textContent='Formato de No. inventario inválido (ej: V233).';}return null;}
-  if(a.serie!==b.serie){if(errEl){errEl.style.display='block';errEl.textContent='Los dos equipos deben ser de la misma serie (ej: V).';}return null;}
+  if(!a||!b){epShowErr(errEl,'Formato de No. inventario inválido (ej: V233).');return null;}
+  if(a.serie!==b.serie){epShowErr(errEl,'Los dos equipos deben ser de la misma serie (ej: V).');return null;}
   const numMin=Math.min(a.num,b.num);
   const numMax=Math.max(a.num,b.num);
   const items=EQUIPO_PATRON_CATALOG.filter(e=>{
     const p=epParsearId(e.id);
     return p&&p.serie===a.serie&&p.num>=numMin&&p.num<=numMax;
   });
-  if(items.length===0){if(errEl){errEl.style.display='block';errEl.textContent='No se encontraron equipos en ese rango.';}return null;}
+  if(items.length===0){epShowErr(errEl,'No se encontraron equipos en ese rango.');return null;}
   return items;
 }
 
@@ -313,7 +316,7 @@ function guardarAsigRangoEquipo(){
   const items=epRangoCatalogo(desde,hasta,err);
   if(!items) return;
 
-  const dias=EP_DIAS.map(d=>d.id).filter(d=>document.getElementById('epra-dia-'+d)&&document.getElementById('epra-dia-'+d).checked);
+  const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epra-dia-'+d);return cb&&cb.checked;});
   let asignados=0;
   items.forEach(e=>{
     if(equipoLibre(e.id)){
