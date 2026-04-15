@@ -4,14 +4,17 @@ const USUARIOS = [
   { user:'verif1', pass:'campo123', nombre:'Carlos Ramírez', socio:'Socio A', zona:'Zona Norte',
     inv:{ dict:48, s1:25, s2:10, uva:30 },
     fdIni:100, fdFin:147, fs1:'S10000100→S10000124', fs2:'S20000050→S20000059',
+    fuva:'UVA26001→UVA26030',
     equipoPatron:{ m:'M01', c:'C01', d:'D01', v:'V001' } },
   { user:'verif2', pass:'campo123', nombre:'Laura Mendoza', socio:'Socio B', zona:'Zona Sur',
     inv:{ dict:62, s1:40, s2:0, uva:15 },
     fdIni:200, fdFin:261, fs1:'S10000200→S10000239', fs2:'—',
+    fuva:'UVA26101→UVA26115',
     equipoPatron:{ m:'M02', c:'', d:'D02', v:'V100' } },
   { user:'verif3', pass:'campo123', nombre:'Héctor Sosa', socio:'Socio A', zona:'Zona Centro',
     inv:{ dict:15, s1:8, s2:5, uva:0 },
     fdIni:400, fdFin:414, fs1:'S10000300→S10000307', fs2:'S20000100→S20000104',
+    fuva:'—',
     equipoPatron:{ m:'M03', c:'C02', d:'', v:'V200' } },
 ];
 
