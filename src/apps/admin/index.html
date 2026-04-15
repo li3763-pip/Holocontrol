@@ -386,6 +386,13 @@
   <!-- Filtros -->
   <div class="toolbar" style="margin-bottom:14px">
     <input class="si stretch" placeholder="Buscar no. inventario o verificador..." id="ep-filt-texto" oninput="epFiltrar()">
+    <select class="si" id="ep-filt-tipo" onchange="epFiltrar()">
+      <option value="">Todos los tipos</option>
+      <option value="M">M — Marco</option>
+      <option value="C">C — Cinco</option>
+      <option value="D">D — Diez</option>
+      <option value="V">V — Veinte</option>
+    </select>
     <select class="si" id="ep-filt-clase" onchange="epFiltrar()">
       <option value="">Todas las clases</option>
       <option value="M1">Clase M1</option>

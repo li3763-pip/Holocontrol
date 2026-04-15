@@ -844,7 +844,7 @@ function openDetail(id){
     </div>
     <div class="card" style="margin-bottom:10px">
       <div class="card-hd">Equipo patrón</div>
-      ${['m:M (Masa)','c:C (Calibrador)','d:D (Dinamómetro)','v:V (Verificador)'].map(p=>{
+      ${['m:M (Marco)','c:C (Cinco)','d:D (Diez)','v:V (Veinte)'].map(p=>{
         const [k,l]=p.split(':');
         return `<div class="irow"><div class="irow-l">${l}</div><div class="irow-v mono">${r.equipoPatron?.[k]||'—'}</div></div>`;
       }).join('')}
