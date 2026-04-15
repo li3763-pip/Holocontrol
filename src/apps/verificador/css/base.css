@@ -31,6 +31,6 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 
 
 /* ── SCROLL ── */
-.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px;transition:padding-bottom .3s ease}
 
 .scroll::-webkit-scrollbar{display:none}
