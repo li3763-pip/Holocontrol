@@ -147,6 +147,40 @@ textarea.fi{resize:none}
 .dict-table td select,.dict-table td input{background:transparent;border:none;outline:none;padding:6px 4px;color:var(--text);font-family:var(--sans);font-size:11px;width:100%;text-align:center;appearance:none;cursor:pointer}
 
 
+/* ── DICTAMEN CARDS ── */
+.dict-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:10px}
+
+.dict-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+.dict-card-name{font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.dict-card-sub{font-size:9px;color:var(--text3);background:var(--surface3);border-radius:4px;padding:2px 7px;white-space:nowrap;flex-shrink:0}
+
+.dict-checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+
+.dict-check-fld{}
+
+.dict-check-lbl{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+
+.dict-result-fld{border-top:1px solid var(--border);padding-top:10px}
+
+.dict-btn-group{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
+
+.dict-btn-group-result{grid-template-columns:repeat(3,1fr)}
+
+.dict-btn{background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 4px;font-size:11px;font-weight:600;font-family:var(--sans);color:var(--text3);cursor:pointer;transition:all .15s;text-align:center;line-height:1}
+
+.dict-btn:active{transform:scale(.95)}
+
+.dict-btn-result{padding:10px 4px;font-size:11px}
+
+.dict-btn.sel-c{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+
+.dict-btn.sel-nc{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+
+.dict-btn.sel-na{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
+
+
 /* ── HOLOGRAMA BLOCK ── */
 .holo-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:12px;margin-bottom:10px}
 
