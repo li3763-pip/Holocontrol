@@ -208,6 +208,7 @@ function renderHome(){
   document.getElementById('inv-dict').textContent=inv.dict;
   document.getElementById('inv-s1').textContent=inv.s1;
   document.getElementById('inv-s2').textContent=inv.s2;
+  document.getElementById('inv-an').textContent=inv.an;
   document.getElementById('inv-uva').textContent=inv.uva;
   const el = document.getElementById('home-list');
   const rec = registros.slice(0,6);
@@ -263,8 +264,9 @@ function renderPerf(){
     <div class="irow"><div class="irow-l">Zona</div><div class="irow-v">${SESSION.zona}</div></div>`;
   document.getElementById('p-folios').innerHTML=`
     <div class="irow"><div class="irow-l">Dictámenes</div><div class="irow-v mono">${SESSION.fdIni.toString().padStart(5,'0')} → ${SESSION.fdFin.toString().padStart(5,'0')}</div></div>
-    <div class="irow"><div class="irow-l">Hologr. S1</div><div class="irow-v mono" style="font-size:10px">${SESSION.fs1}</div></div>
-    <div class="irow"><div class="irow-l">Hologr. S2</div><div class="irow-v mono" style="font-size:10px">${SESSION.fs2}</div></div>`;
+    <div class="irow"><div class="irow-l">Hologr. S1</div><div class="irow-v mono" style="font-size:10px">${SESSION.fs1||'—'}</div></div>
+    <div class="irow"><div class="irow-l">Hologr. S2</div><div class="irow-v mono" style="font-size:10px">${SESSION.fs2||'—'}</div></div>
+    <div class="irow"><div class="irow-l">Hologr. AN</div><div class="irow-v mono" style="font-size:10px">${SESSION.fan||'—'}</div></div>`;
   document.getElementById('p-sync').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('p-local').textContent=registros.length;
 }
@@ -431,11 +433,13 @@ function computeHoloFolios(){
   if(!n) return;
   const usedS1=_countUsedInRegistros('S1');
   const usedS2=_countUsedInRegistros('S2');
+  const usedAN=_countUsedInRegistros('AN');
   const usedUVA=_countUVAInRegistros();
   const rS1=SESSION?_parseRange(SESSION.fs1):null;
   const rS2=SESSION?_parseRange(SESSION.fs2):null;
+  const rAN=SESSION?_parseRange(SESSION.fan):null;
   const rUVA=SESSION?_parseRange(SESSION.fuva):null;
-  let batchS1=0, batchS2=0, batchUVA=0;
+  let batchS1=0, batchS2=0, batchAN=0, batchUVA=0;
   for(let i=0;i<n;i++){
     const tipoEl=document.getElementById('ht-'+i);
     const profEl=document.getElementById('hf-p-'+i);
@@ -449,11 +453,14 @@ function computeHoloFolios(){
     } else if(tipo==='S2'&&rS2){
       profEl.value=rS2.prefix+String(rS2.start+usedS2+batchS2).padStart(rS2.padLen,'0');
       batchS2++;
+    } else if(tipo==='AN'&&rAN){
+      profEl.value=rAN.prefix+String(rAN.start+usedAN+batchAN).padStart(rAN.padLen,'0');
+      batchAN++;
     } else {
       profEl.value='';
     }
-    // UVA folio — se asigna cuando hay tipo válido (S1 o S2)
-    if((tipo==='S1'||tipo==='S2')&&rUVA){
+    // UVA folio — se asigna cuando hay tipo válido (S1, S2 o AN)
+    if((tipo==='S1'||tipo==='S2'||tipo==='AN')&&rUVA){
       uvaEl.value=rUVA.prefix+String(rUVA.start+usedUVA+batchUVA).padStart(rUVA.padLen,'0');
       batchUVA++;
     } else {
@@ -614,9 +621,9 @@ function syncHoloRows(){
           <label>Tipo holograma</label>
           <select class="fi" id="ht-${i}" onchange="computeHoloFolios()" style="padding:9px 10px;font-size:12px">
             <option value="">Tipo</option>
-            <option value="S1">S1 — Semestral</option>
-            <option value="S2">S2 — Anual</option>
-            <option value="AN">AN — Anulado</option>
+            <option value="S1">S1 — 1er Semestre</option>
+            <option value="S2">S2 — 2do Semestre</option>
+            <option value="AN">AN — Anual</option>
           </select>
         </div>
         <div class="fld" style="margin-bottom:0">
@@ -769,6 +776,7 @@ function guardarRegistro(){
   instrumentos.forEach(inst=>{
     if(inst.holoTipo==='S1') SESSION.inv.s1=Math.max(0,SESSION.inv.s1-1);
     if(inst.holoTipo==='S2') SESSION.inv.s2=Math.max(0,SESSION.inv.s2-1);
+    if(inst.holoTipo==='AN') SESSION.inv.an=Math.max(0,SESSION.inv.an-1);
     if(inst.holoU) SESSION.inv.uva=Math.max(0,SESSION.inv.uva-1);
   });
 
