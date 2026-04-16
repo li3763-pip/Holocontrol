@@ -2,7 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HoloControl">
+<meta name="theme-color" content="#7B1C3A">
 <title>HoloControl — Sistema de Gestión</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="../../shared/assets/fonts.css">
@@ -994,5 +999,18 @@
 <script src="js/papeleria.js"></script>
 <script src="js/usuarios.js"></script>
 <script src="js/equipo_patron.js"></script>
+<script>
+(function () {
+  function pedirPantallaCompleta() {
+    var el = document.documentElement;
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (fn && !document.fullscreenElement && !document.webkitFullscreenElement) {
+      fn.call(el).catch(function () {});
+    }
+  }
+  document.addEventListener('touchstart', pedirPantallaCompleta, { once: true });
+  document.addEventListener('click', pedirPantallaCompleta, { once: true });
+})();
+</script>
 </body>
 </html>
