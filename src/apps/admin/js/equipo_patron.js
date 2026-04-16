@@ -238,7 +238,10 @@ function liberarEquipo(equipoId){
   renderEquipoPatron();
 }
 
-/* ── ASIGNAR POR RANGO ── */
+/* ── ASIGNAR POR RANGO (múltiples rangos) ── */
+let epraRowCount=0;
+let epraActiveRows=[];
+
 function abrirAsigRangoEquipo(){
   const sel=document.getElementById('epra-verificador');
   sel.innerHTML='<option value="">Seleccionar verificador...</option>';
@@ -251,29 +254,78 @@ function abrirAsigRangoEquipo(){
     opt.textContent=`${v.nombre} (${v.socio})`;
     sel.appendChild(opt);
   });
-  document.getElementById('epra-desde').value='';
-  document.getElementById('epra-hasta').value='';
+  // Limpiar y reiniciar filas de rangos
+  epraRowCount=0;
+  epraActiveRows=[];
+  document.getElementById('epra-rangos-container').innerHTML='';
+  epraAgregarRango();
   document.getElementById('epra-fecha').value=TODAY;
   document.getElementById('epra-preview').style.display='none';
+  document.getElementById('epra-preview').innerHTML='';
   document.getElementById('epra-err').style.display='none';
   EP_DIAS.forEach(d=>{const cb=document.getElementById('epra-dia-'+d.id);if(cb)cb.checked=false;});
   openModal('modal-equipo-patron-rango');
 }
 
+function epraAgregarRango(desdeVal,hastaVal){
+  const idx=epraRowCount++;
+  epraActiveRows.push(idx);
+  const container=document.getElementById('epra-rangos-container');
+  const row=document.createElement('div');
+  row.id='epra-row-'+idx;
+  row.style.cssText='border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:8px;background:var(--surface2)';
+  row.innerHTML=`<div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap">
+    <div class="fg" style="flex:1;min-width:110px">
+      <label class="fl">Desde</label>
+      <input class="fi" type="text" id="epra-desde-${idx}" placeholder="Ej: M01" value="${desdeVal||''}" oninput="epraPreview()">
+    </div>
+    <div class="fg" style="flex:1;min-width:110px">
+      <label class="fl">Hasta</label>
+      <input class="fi" type="text" id="epra-hasta-${idx}" placeholder="Ej: M15" value="${hastaVal||''}" oninput="epraPreview()">
+    </div>
+    <button type="button" class="btn sm ghost" style="height:34px;padding:0 10px;flex-shrink:0;margin-bottom:0" onclick="epraEliminarRango(${idx})" title="Quitar este rango" aria-label="Quitar rango">✕</button>
+  </div>
+  <div id="epra-row-info-${idx}" style="font-size:10px;color:var(--text2);margin-top:4px;display:none"></div>`;
+  container.appendChild(row);
+  if(desdeVal&&hastaVal) epraPreview();
+}
+
+function epraEliminarRango(idx){
+  epraActiveRows=epraActiveRows.filter(i=>i!==idx);
+  const row=document.getElementById('epra-row-'+idx);
+  if(row) row.remove();
+  epraPreview();
+}
+
 function epraPreview(){
-  const desde=(document.getElementById('epra-desde').value||'').trim().toUpperCase();
-  const hasta=(document.getElementById('epra-hasta').value||'').trim().toUpperCase();
   const preview=document.getElementById('epra-preview');
   const err=document.getElementById('epra-err');
   err.style.display='none';
-  preview.style.display='none';
-  if(!desde||!hasta) return;
-  const r=epRangoCatalogo(desde,hasta,err);
-  if(!r||r.length===0) return;
-  const libres=r.filter(e=>equipoLibre(e.id));
-  const ocupados=r.length-libres.length;
+  let totalEq=0,totalLibres=0,totalOcupados=0,hasValid=false;
+  epraActiveRows.forEach(idx=>{
+    const desdeEl=document.getElementById('epra-desde-'+idx);
+    const hastaEl=document.getElementById('epra-hasta-'+idx);
+    const info=document.getElementById('epra-row-info-'+idx);
+    if(!desdeEl||!hastaEl) return;
+    const desde=(desdeEl.value||'').trim().toUpperCase();
+    const hasta=(hastaEl.value||'').trim().toUpperCase();
+    if(!desde||!hasta){if(info)info.style.display='none';return;}
+    const r=epRangoCatalogo(desde,hasta,null);
+    if(!r||r.length===0){
+      if(info){info.style.display='block';info.style.color='var(--red)';info.textContent='Rango inválido o no encontrado.';}
+      return;
+    }
+    const libres=r.filter(e=>equipoLibre(e.id));
+    const ocupados=r.length-libres.length;
+    totalEq+=r.length;totalLibres+=libres.length;totalOcupados+=ocupados;hasValid=true;
+    if(info){
+      info.style.display='block';info.style.color='var(--text2)';
+      info.innerHTML=`Rango <strong>${r[0].id}–${r[r.length-1].id}</strong>: <strong>${r.length}</strong> equipo(s) · <strong style="color:var(--green)">${libres.length}</strong> libres · <span style="color:var(--amber)">${ocupados} ya asignados</span>`;
+    }
+  });
+  if(!hasValid){preview.style.display='none';return;}
   preview.style.display='block';
-  preview.innerHTML=`<strong>${r.length}</strong> equipo(s) en rango: <strong>${libres.length}</strong> libres, <span style="color:var(--amber)">${ocupados} ya asignados (se omitirán)</span>. Rango: ${r[0].id} – ${r[r.length-1].id}`;
+  preview.innerHTML=`<strong>Total: ${totalEq}</strong> equipo(s) en todos los rangos · <strong style="color:var(--green)">${totalLibres}</strong> se asignarán · <span style="color:var(--amber)">${totalOcupados} ya asignados (se omitirán)</span>`;
 }
 
 function epShowErr(errEl,msg){if(errEl){errEl.style.display='block';errEl.textContent=msg;}}
@@ -295,14 +347,11 @@ function epRangoCatalogo(desdeId,hastaId,errEl){
 
 function guardarAsigRangoEquipo(){
   const verId=document.getElementById('epra-verificador').value;
-  const desde=(document.getElementById('epra-desde').value||'').trim().toUpperCase();
-  const hasta=(document.getElementById('epra-hasta').value||'').trim().toUpperCase();
   const fecha=document.getElementById('epra-fecha').value;
   const err=document.getElementById('epra-err');
   err.style.display='none';
 
   if(!verId){err.style.display='block';err.textContent='Selecciona un verificador.';return;}
-  if(!desde||!hasta){err.style.display='block';err.textContent='Indica el rango de equipos.';return;}
   if(!fecha){err.style.display='block';err.textContent='Indica la fecha de asignación.';return;}
 
   const ver=verificadores.find(v=>v.id===verId);
@@ -311,13 +360,37 @@ function guardarAsigRangoEquipo(){
     err.style.display='block';err.textContent='Solo puedes asignar equipos a tus propios verificadores.';return;
   }
 
-  const items=epRangoCatalogo(desde,hasta,err);
-  if(!items) return;
+  // Recopilar y validar todos los rangos
+  let allItems=[];
+  for(const idx of epraActiveRows){
+    const desdeEl=document.getElementById('epra-desde-'+idx);
+    const hastaEl=document.getElementById('epra-hasta-'+idx);
+    if(!desdeEl||!hastaEl) continue;
+    const desde=(desdeEl.value||'').trim().toUpperCase();
+    const hasta=(hastaEl.value||'').trim().toUpperCase();
+    if(!desde&&!hasta) continue; // fila vacía, se omite
+    if(!desde||!hasta){
+      err.style.display='block';
+      err.textContent='Rango incompleto: completa los campos "Desde" y "Hasta" en cada rango, o quita los rangos vacíos.';
+      return;
+    }
+    const items=epRangoCatalogo(desde,hasta,err);
+    if(!items) return;
+    allItems=allItems.concat(items);
+  }
+
+  if(allItems.length===0){
+    err.style.display='block';
+    err.textContent='Agrega al menos un rango de equipos.';
+    return;
+  }
 
   const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epra-dia-'+d);return cb&&cb.checked;});
   let asignados=0;
-  items.forEach(e=>{
-    if(equipoLibre(e.id)){
+  const seen=new Set();
+  allItems.forEach(e=>{
+    if(!seen.has(e.id)&&equipoLibre(e.id)){
+      seen.add(e.id);
       asignacionesEquipo.push({equipoId:e.id,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
       asignados++;
     }
@@ -338,10 +411,12 @@ function abrirAsigPorTipo(serie){
     abrirAsigEquipo(items[0].id);
     return;
   }
-  // Serie con varios equipos: abrir modal de rango pre-cargado con el rango completo
+  // Serie con varios equipos: abrir modal de múltiples rangos pre-cargado con el rango completo
   abrirAsigRangoEquipo();
-  document.getElementById('epra-desde').value=items[0].id;
-  document.getElementById('epra-hasta').value=items[items.length-1].id;
+  const desdeEl=document.getElementById('epra-desde-0');
+  const hastaEl=document.getElementById('epra-hasta-0');
+  if(desdeEl) desdeEl.value=items[0].id;
+  if(hastaEl) hastaEl.value=items[items.length-1].id;
   epraPreview();
 }
 

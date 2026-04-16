@@ -361,7 +361,7 @@
 <div id="sec-equipo-patron" class="section">
   <div class="sec-actions">
     <span style="font-size:11px;color:var(--text3)">Resumen por tipo de equipo patrón. Usa «Asignar» en cada tipo para asignar al verificador.</span>
-    <button class="btn sm primary" onclick="abrirAsigRangoEquipo()" id="ep-btn-rango" style="display:none">Asignar por rango</button>
+    <button class="btn sm primary" onclick="abrirAsigRangoEquipo()" id="ep-btn-rango" style="display:none">Asignar múltiples rangos</button>
   </div>
 
   <!-- Métricas -->
@@ -452,7 +452,7 @@
 <!-- ═══════════════════ MODAL ASIGNAR EQUIPO PATRÓN POR RANGO ═══════════════════ -->
 <div id="modal-equipo-patron-rango" class="modal-bg">
 <div class="modal">
-  <h3>Asignar equipo patrón por rango</h3>
+  <h3>Asignar equipo patrón — múltiples rangos</h3>
   <div class="fgrid">
     <div class="fg" style="grid-column:span 2">
       <label class="fl">Verificador</label>
@@ -460,14 +460,14 @@
         <option value="">Seleccionar verificador...</option>
       </select>
     </div>
-    <div class="fg">
-      <label class="fl">Desde (No. inventario)</label>
-      <input class="fi" type="text" id="epra-desde" placeholder="Ej: V-001 o V001" oninput="epraPreview()">
-    </div>
-    <div class="fg">
-      <label class="fl">Hasta (No. inventario)</label>
-      <input class="fi" type="text" id="epra-hasta" placeholder="Ej: V-100 o V100" oninput="epraPreview()">
-    </div>
+  </div>
+
+  <!-- Filas de rangos dinámicas -->
+  <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Rangos de equipos (puedes agregar varios tipos):</div>
+  <div id="epra-rangos-container" style="margin-bottom:8px"></div>
+  <button type="button" class="btn sm ghost" style="margin-bottom:14px" onclick="epraAgregarRango()">+ Agregar otro rango</button>
+
+  <div class="fgrid">
     <div class="fg" style="grid-column:span 2">
       <label class="fl">Fecha de asignación</label>
       <input class="fi" type="date" id="epra-fecha">
@@ -489,7 +489,7 @@
   <div id="epra-err" style="display:none" class="err-box"></div>
   <div class="modal-btns">
     <button class="btn ghost" onclick="closeModal('modal-equipo-patron-rango')">Cancelar</button>
-    <button class="btn primary" onclick="guardarAsigRangoEquipo()">Asignar rango</button>
+    <button class="btn primary" onclick="guardarAsigRangoEquipo()">Asignar</button>
   </div>
 </div>
 </div>
