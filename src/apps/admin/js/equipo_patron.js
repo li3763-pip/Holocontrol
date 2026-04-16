@@ -192,7 +192,7 @@ function abrirAsigEquipo(equipoId){
     sel.appendChild(opt);
   });
 
-  document.getElementById('epa-fecha').value=TODAY;
+  document.getElementById('epa-fecha').value=getTodayMX();
   document.getElementById('epa-err').style.display='none';
   EP_DIAS.forEach(d=>{const cb=document.getElementById('epa-dia-'+d.id);if(cb)cb.checked=false;});
   openModal('modal-equipo-patron-asig');
@@ -259,7 +259,7 @@ function abrirAsigRangoEquipo(){
   epraActiveRows=[];
   document.getElementById('epra-rangos-container').innerHTML='';
   epraAgregarRango();
-  document.getElementById('epra-fecha').value=TODAY;
+  document.getElementById('epra-fecha').value=getTodayMX();
   document.getElementById('epra-preview').style.display='none';
   document.getElementById('epra-preview').innerHTML='';
   document.getElementById('epra-err').style.display='none';
