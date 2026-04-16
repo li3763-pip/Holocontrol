@@ -1,4 +1,6 @@
-const TODAY=new Date().toISOString().split('T')[0];
+function getTodayMX(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Mexico_City'}).format(new Date());}
+function getNowTimeMX(){return new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());}
+const TODAY=getTodayMX();
 const SOCIOS=['Socio A','Socio B','Socio C'];
 const TIPOS=['1er semestre','2do semestre','Anual'];
 const TIPO_MAP={'1':'1er semestre','2':'2do semestre','3':'Anual'};
@@ -557,11 +559,11 @@ function renderProveedorUVA(){
 }
 function editPrecioUVA(){document.getElementById('pdisp-uva').style.display='none';document.getElementById('pedit-uva').style.display='flex';}
 function cancelPrecioUVA(){document.getElementById('pdisp-uva').style.display='block';document.getElementById('pedit-uva').style.display='none';}
-function savePrecioUVA(){const v=parseFloat(document.getElementById('pinput-uva').value)||0;if(!v){alert('Ingresa un precio válido.');return;}proveedorUVA.precio=v;proveedorUVA.fechaPrecio=TODAY;renderProveedores();}
+function savePrecioUVA(){const v=parseFloat(document.getElementById('pinput-uva').value)||0;if(!v){alert('Ingresa un precio válido.');return;}proveedorUVA.precio=v;proveedorUVA.fechaPrecio=getTodayMX();renderProveedores();}
 
 function editPrecio(i){document.getElementById('pdisp-'+i).style.display='none';document.getElementById('pedit-'+i).style.display='flex';}
 function cancelPrecio(i){document.getElementById('pdisp-'+i).style.display='block';document.getElementById('pedit-'+i).style.display='none';}
-function savePrecio(i){const v=parseFloat(document.getElementById('pinput-'+i).value)||0;if(!v){alert('Ingresa un precio válido.');return;}proveedores[i].precio=v;proveedores[i].fechaPrecio=TODAY;renderProveedores();}
+function savePrecio(i){const v=parseFloat(document.getElementById('pinput-'+i).value)||0;if(!v){alert('Ingresa un precio válido.');return;}proveedores[i].precio=v;proveedores[i].fechaPrecio=getTodayMX();renderProveedores();}
 
 /* ── DETALLE COMPRA ── */
 function verDetalle(folio){
@@ -600,7 +602,7 @@ function verDetalle(folio){
 ══════════════════════════════════════════════ */
 let cSocios=[],cNextSocio=1,cNextTipo=1;
 
-function validarFechaC(){const v=document.getElementById('c-fecha').value,err=document.getElementById('c-fecha-err'),fi=document.getElementById('c-fecha');if(v&&v>TODAY){fi.classList.add('date-invalid');err.style.display='block';return false;}fi.classList.remove('date-invalid');err.style.display='none';return true;}
+function validarFechaC(){const v=document.getElementById('c-fecha').value,err=document.getElementById('c-fecha-err'),fi=document.getElementById('c-fecha');if(v&&v>getTodayMX()){fi.classList.add('date-invalid');err.style.display='block';return false;}fi.classList.remove('date-invalid');err.style.display='none';return true;}
 
 function selProv(){
   const prov=document.getElementById('c-prov').value,precio=getPrecio(prov);
@@ -699,7 +701,7 @@ function guardarCompra(){
 let rEntries=[],rNextId=1;
 let manualesDecision={};
 
-function validarFechaR(){const v=document.getElementById('r-fecha').value,err=document.getElementById('r-fecha-err'),fi=document.getElementById('r-fecha');if(v&&v>TODAY){fi.classList.add('date-invalid');err.style.display='block';return false;}fi.classList.remove('date-invalid');err.style.display='none';return true;}
+function validarFechaR(){const v=document.getElementById('r-fecha').value,err=document.getElementById('r-fecha-err'),fi=document.getElementById('r-fecha');if(v&&v>getTodayMX()){fi.classList.add('date-invalid');err.style.display='block';return false;}fi.classList.remove('date-invalid');err.style.display='none';const horaEl=document.getElementById('r-hora');if(horaEl){horaEl.max=(v===getTodayMX())?getNowTimeMX():'';}return true;}
 
 /* ── FALTANTE POR SOCIO Y TIPO ── */
 /* Extrae cantidad de un valor de asignacion (número o [{ini,fin,cant}]) */
@@ -991,7 +993,9 @@ function guardarRecepcion(){
   if(!validarFechaR())return;
   const orden=document.getElementById('r-orden').value,fecha=document.getElementById('r-fecha').value,quien=document.getElementById('r-quien').value;
   if(!orden||!fecha||!quien.trim()){alert('Completa todos los datos.');return;}
-  if(fecha>TODAY){alert('La fecha no puede ser futura.');return;}
+  if(fecha>getTodayMX()){alert('La fecha no puede ser futura.');return;}
+  const hora=document.getElementById('r-hora').value;
+  if(fecha===getTodayMX()&&hora&&hora>getNowTimeMX()){alert('La hora no puede ser futura.');return;}
   const fpt=getFoliosValidosPorTipo();
   const total=Object.values(fpt).reduce((s,a)=>s+a.length,0);
   if(total===0){alert('No hay folios válidos para registrar.');return;}
@@ -1072,9 +1076,9 @@ function go(id){
 function openModal(id){
   if(id==='modal-recepcion'){
     poblarOrdenes();
-    document.getElementById('r-fecha').value=TODAY;document.getElementById('r-fecha').max=TODAY;
-    document.getElementById('r-hora').value=new Date().toTimeString().slice(0,5);
-    document.getElementById('fd-rec').textContent=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('r-fecha').value=getTodayMX();document.getElementById('r-fecha').max=getTodayMX();
+    document.getElementById('r-hora').value=getNowTimeMX();document.getElementById('r-hora').max=getNowTimeMX();
+    document.getElementById('fd-rec').textContent=new Date().toLocaleDateString('es-MX',{timeZone:'America/Mexico_City',day:'2-digit',month:'short',year:'numeric'});
     document.getElementById('fn-rec').textContent='REC-'+String(recepciones.length+1).padStart(4,'0');
     document.getElementById('r-guardar-btn').disabled=true;
     document.getElementById('r-faltante-panel').style.display='none';
@@ -1104,8 +1108,8 @@ function openModal(id){
   }
   if(id==='modal-dictamen'){
     document.getElementById('fn-dict').textContent=nextFolioDict();
-    document.getElementById('fd-dict').textContent=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
-    document.getElementById('d-fecha').value=TODAY;document.getElementById('d-fecha').max=TODAY;
+    document.getElementById('fd-dict').textContent=new Date().toLocaleDateString('es-MX',{timeZone:'America/Mexico_City',day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('d-fecha').value=getTodayMX();document.getElementById('d-fecha').max=getTodayMX();
     document.getElementById('d-fecha-err').style.display='none';
     document.getElementById('d-fecha').classList.remove('date-invalid');
     document.getElementById('dict-precio-val').textContent='$'+proveedorUVA.precio.toFixed(2);
@@ -1116,8 +1120,8 @@ function openModal(id){
   }
   if(id==='modal-transferencia'){
     document.getElementById('fn-trans').textContent=nextFolioTrans();
-    document.getElementById('fd-trans').textContent=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
-    document.getElementById('tr-fecha').value=TODAY;document.getElementById('tr-fecha').max=TODAY;
+    document.getElementById('fd-trans').textContent=new Date().toLocaleDateString('es-MX',{timeZone:'America/Mexico_City',day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('tr-fecha').value=getTodayMX();document.getElementById('tr-fecha').max=getTodayMX();
     document.getElementById('tr-fecha-err').style.display='none';
     document.getElementById('tr-fecha').classList.remove('date-invalid');
     document.getElementById('tr-tipo').value='';
@@ -1163,8 +1167,8 @@ function openModal(id){
   }
   if(id==='modal-uva-compra'){
     document.getElementById('fn-uva-compra').textContent=nextUvaFolioCompra();
-    document.getElementById('fd-uva-compra').textContent=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
-    document.getElementById('uc-fecha').value=TODAY;document.getElementById('uc-fecha').max=TODAY;
+    document.getElementById('fd-uva-compra').textContent=new Date().toLocaleDateString('es-MX',{timeZone:'America/Mexico_City',day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('uc-fecha').value=getTodayMX();document.getElementById('uc-fecha').max=getTodayMX();
     document.getElementById('uc-fecha-err').style.display='none';
     document.getElementById('uc-fecha').classList.remove('date-invalid');
     document.getElementById('uc-precio-val').textContent='$'+proveedorUVA.precio.toFixed(2);
@@ -1174,8 +1178,8 @@ function openModal(id){
     ['uc-f1-ini','uc-f1-fin','uc-f2-ini','uc-f2-fin','uc-f3-ini','uc-f3-fin','uc-f4-ini','uc-f4-fin','uc-f5-ini','uc-f5-fin'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
   }
   if(id==='modal-compra'){
-    document.getElementById('c-fecha').value=TODAY;document.getElementById('c-fecha').max=TODAY;
-    document.getElementById('fd-compra').textContent=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('c-fecha').value=getTodayMX();document.getElementById('c-fecha').max=getTodayMX();
+    document.getElementById('fd-compra').textContent=new Date().toLocaleDateString('es-MX',{timeZone:'America/Mexico_City',day:'2-digit',month:'short',year:'numeric'});
     document.getElementById('fn-compra').textContent='— elige proveedor —';
     document.getElementById('c-socios-cont').innerHTML='<div class="empty-msg">Agrega al menos un socio.</div>';
     document.getElementById('c-precio-box').style.display='none';document.getElementById('c-warn-prov').style.display='none';
@@ -1280,7 +1284,7 @@ function validarFechaUC(){
   const v=document.getElementById('uc-fecha').value;
   const err=document.getElementById('uc-fecha-err');
   const fi=document.getElementById('uc-fecha');
-  if(v&&v>TODAY){fi.classList.add('date-invalid');err.style.display='block';return false;}
+  if(v&&v>getTodayMX()){fi.classList.add('date-invalid');err.style.display='block';return false;}
   fi.classList.remove('date-invalid');err.style.display='none';return true;
 }
 /* Verifica si un rango UVA tiene folios ya registrados para ese tipo */
@@ -1384,7 +1388,7 @@ function guardarUvaCompra(){
   // Registrar recepción automática
   const tiposRec={};
   UVA_TIPOS.forEach(t=>{tiposRec[t]={ini:folios[t]?.ini||'',fin:folios[t]?.fin||'',cant:tipos[t]};});
-  uvaRecepciones.unshift({folio:nextUvaFolioRec(),orden:folio,socio,fecha,hora:new Date().toTimeString().slice(0,5),tipos:tiposRec,total,quien:'Entrega en compra',notas:'Recepción automática — entrega al momento de la compra'});
+  uvaRecepciones.unshift({folio:nextUvaFolioRec(),orden:folio,socio,fecha,hora:getNowTimeMX(),tipos:tiposRec,total,quien:'Entrega en compra',notas:'Recepción automática — entrega al momento de la compra'});
   closeModal('modal-uva-compra');renderUvaCompras();
 }
 
@@ -1865,7 +1869,7 @@ function validarFechaTR(){
   const v=document.getElementById('tr-fecha').value,
         err=document.getElementById('tr-fecha-err'),
         fi=document.getElementById('tr-fecha');
-  if(v&&v>TODAY){fi.classList.add('date-invalid');err.style.display='block';return false;}
+  if(v&&v>getTodayMX()){fi.classList.add('date-invalid');err.style.display='block';return false;}
   fi.classList.remove('date-invalid');err.style.display='none';return true;
 }
 
@@ -2035,7 +2039,7 @@ function guardarTransferencia(){
   const socioOrigen=getSocioDeEntidad(de);
   const socioDestino=getSocioDeEntidad(a);
   if(!socioOrigen||!socioDestino){alert('Origen o destino inválido.');return;}
-  if(!fecha||fecha>TODAY){alert('La fecha no puede ser futura.');return;}
+  if(!fecha||fecha>getTodayMX()){alert('La fecha no puede ser futura.');return;}
   if(!ini||!fin){alert('Captura el folio inicial y final.');return;}
 
   let cant=0, subtipo='', err='';
@@ -2100,7 +2104,7 @@ function guardarTransferencia(){
     estado:estadoInicial,
     socioEmisor: socioOrigen,
     socioReceptor: socioDestino,
-    fechaConfirm:esInterna?TODAY:null,
+    fechaConfirm:esInterna?getTodayMX():null,
     confirmadaPor:esInterna?SESSION.user:null,
     autorizadaPor:null, fechaAutorizacion:null,
     aprobSocioEmisor:null, aprobSocioReceptor:null
@@ -2183,7 +2187,7 @@ function validarFechaDict(){
   const v=document.getElementById('d-fecha').value,
         err=document.getElementById('d-fecha-err'),
         fi=document.getElementById('d-fecha');
-  if(v&&v>TODAY){fi.classList.add('date-invalid');err.style.display='block';return false;}
+  if(v&&v>getTodayMX()){fi.classList.add('date-invalid');err.style.display='block';return false;}
   fi.classList.remove('date-invalid');err.style.display='none';return true;
 }
 
@@ -2837,7 +2841,7 @@ function guardarAsigVer(){
     }
   }
   if(cant<=0){alert('El folio final debe ser mayor al inicial.');return;}
-  v.asignaciones.push({tipo,subtipo,folioIni:ini,folioFin:fin,cant,fecha:TODAY,notas:document.getElementById('av-notas').value});
+  v.asignaciones.push({tipo,subtipo,folioIni:ini,folioFin:fin,cant,fecha:getTodayMX(),notas:document.getElementById('av-notas').value});
   closeModal('modal-asig-ver');
   renderVerificadores();
 }
@@ -2876,7 +2880,7 @@ function confirmarTrans(folio){
     `${t.cant.toLocaleString()} ${t.tipo}(s) de ${t.de} · Folios ${t.folioIni}→${t.folioFin}`,
     ()=>{
       t.estado='confirmada';
-      t.fechaConfirm=TODAY;
+      t.fechaConfirm=getTodayMX();
       t.confirmadaPor=SESSION.user;
       renderTransferencias();
       updNotifPendientes();
@@ -2890,7 +2894,7 @@ function rechazarTrans(folio){
   const t=transferencias.find(t=>t.folio===folio);
   if(!t||(t.estado!=='pendiente'&&t.estado!=='aprobacion_socio_emisor'&&t.estado!=='aprobacion_socio_receptor'))return;
   if(!confirm(`¿Rechazar la transferencia de ${t.cant.toLocaleString()} ${t.tipo}(s)?`))return;
-  t.estado='rechazada';t.fechaConfirm=TODAY;t.confirmadaPor=SESSION.user;
+  t.estado='rechazada';t.fechaConfirm=getTodayMX();t.confirmadaPor=SESSION.user;
   renderTransferencias();updNotifPendientes();
 }
 
