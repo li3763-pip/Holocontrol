@@ -993,9 +993,10 @@ function guardarRecepcion(){
   if(!validarFechaR())return;
   const orden=document.getElementById('r-orden').value,fecha=document.getElementById('r-fecha').value,quien=document.getElementById('r-quien').value;
   if(!orden||!fecha||!quien.trim()){alert('Completa todos los datos.');return;}
-  if(fecha>getTodayMX()){alert('La fecha no puede ser futura.');return;}
+  const todayMX=getTodayMX(),nowTimeMX=getNowTimeMX();
+  if(fecha>todayMX){alert('La fecha no puede ser futura.');return;}
   const hora=document.getElementById('r-hora').value;
-  if(fecha===getTodayMX()&&hora&&hora>getNowTimeMX()){alert('La hora no puede ser futura.');return;}
+  if(fecha===todayMX&&hora&&hora>nowTimeMX){alert('La hora no puede ser futura.');return;}
   const fpt=getFoliosValidosPorTipo();
   const total=Object.values(fpt).reduce((s,a)=>s+a.length,0);
   if(total===0){alert('No hay folios válidos para registrar.');return;}
