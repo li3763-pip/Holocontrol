@@ -1,5 +1,5 @@
-/* HoloVerifica — Service Worker v1 */
-const CACHE = 'holoVerifica-v1';
+/* HoloVerifica — Service Worker v2 */
+const CACHE = 'holoVerifica-v2';
 
 const PRECACHE = [
   './',
