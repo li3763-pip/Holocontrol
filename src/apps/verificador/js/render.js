@@ -699,7 +699,7 @@ function syncDictRows(){
     {id:'dr',lbl:'Repetibilidad'},
     {id:'dx',lbl:'Excentricidad'},
   ];
-  const opts=`<option value="">—</option><option value="C">C — Conforme</option><option value="NC">NC — No conforme</option><option value="NA">NA — No aplica</option>`;
+  const opts=`<option value="">—</option><option value="C">C — Cumple</option><option value="NC">NC — No cumple</option><option value="NA">NA — No aplica</option>`;
   container.innerHTML=instrBuffer.map((ins,i)=>`
     <div class="dict-card">
       <div class="dict-card-hd">
