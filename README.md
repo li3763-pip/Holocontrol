@@ -92,10 +92,15 @@ PWABuilder y Bubblewrap generan este archivo automáticamente durante el proceso
 
 ---
 
-## Tareas pendientes
+## Estado del proyecto
 
-- Vincular la app del verificador con el panel web (#1)
-- Agregar catálogo de equipo patrón y vincularlo con la app (#2)
+### Completado ✅
+
+- Vincular la app del verificador con el panel web (#1) — los verificadores y sus asignaciones se gestionan desde el panel admin y se leen en la app campo
+- Catálogo de equipo patrón y asignación a verificadores (#2) — módulo `equipo_patron.js` integrado en el panel admin; el verificador solo puede usar el equipo que le fue asignado
+
+### Pendiente
+
 - Completar el catálogo de básculas (#3)
 
 ## Versión
