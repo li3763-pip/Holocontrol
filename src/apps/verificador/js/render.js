@@ -501,18 +501,43 @@ function ndPrev(){ if(ndStep>1) goStep(ndStep-1); }
 function validStep(){
   if(ndStep===1){
     if(!document.getElementById('nd-razon').value.trim()){ toast('Ingresa el nombre o razón social','err'); return false; }
+    const giro=document.getElementById('nd-giro').value;
+    if(!giro){ toast('Selecciona el giro del establecimiento','err'); return false; }
+    if(giro==='Otro' && !document.getElementById('nd-giro-otro').value.trim()){ toast('Especifica el giro del establecimiento','err'); return false; }
+    if(!document.getElementById('nd-fecha-sol').value){ toast('Ingresa la fecha de solicitud','err'); return false; }
+    if(!document.getElementById('nd-cp').value.trim()){ toast('Ingresa el código postal','err'); return false; }
+    const coloniaEl=document.getElementById('nd-colonia');
+    if(coloniaEl && !coloniaEl.disabled && !coloniaEl.value){ toast('Selecciona la colonia','err'); return false; }
+    if(!document.getElementById('nd-calle').value.trim()){ toast('Ingresa la calle y número','err'); return false; }
     if(!document.getElementById('nd-entidad').value && !document.getElementById('nd-entidad-txt').value){
       toast('Ingresa el C.P. para obtener la entidad federativa','err'); return false;
     }
     return true;
   }
-  if(ndStep===2){ return true; } // instrumentos opcionales
+  if(ndStep===2){
+    if(!instrBuffer.length){ toast('Agrega al menos un instrumento','err'); return false; }
+    return true;
+  }
   if(ndStep===3){
     const fd=document.getElementById('nd-folio-dict').value.trim();
     if(!fd){ toast('Ingresa el folio del dictamen','err'); return false; }
     const n=parseInt(fd);
     if(n<SESSION.fdIni||n>SESSION.fdFin){ toast('Folio fuera de tu rango asignado','err'); return false; }
     if(registros.some(r=>parseInt(r.folioDict)===n)){ toast('Ese folio ya fue utilizado','err'); return false; }
+    if(!document.getElementById('nd-fecha-dict').value){ toast('Ingresa la fecha del dictamen','err'); return false; }
+    for(let i=0;i<instrBuffer.length;i++){
+      if(!document.getElementById('dv-'+i)?.value){ toast(`Instrumento ${i+1}: selecciona resultado de Insp. Visual`,'err'); return false; }
+      if(!document.getElementById('de-'+i)?.value){ toast(`Instrumento ${i+1}: selecciona resultado de Exactitud`,'err'); return false; }
+      if(!document.getElementById('dr-'+i)?.value){ toast(`Instrumento ${i+1}: selecciona resultado de Repetibilidad`,'err'); return false; }
+      if(!document.getElementById('dx-'+i)?.value){ toast(`Instrumento ${i+1}: selecciona resultado de Excentricidad`,'err'); return false; }
+      if(!document.getElementById('dc-'+i)?.value){ toast(`Instrumento ${i+1}: selecciona si Cumple NOM-010`,'err'); return false; }
+      if(!document.getElementById('ht-'+i)?.value){ toast(`Instrumento ${i+1}: selecciona el tipo de holograma`,'err'); return false; }
+    }
+    return true;
+  }
+  if(ndStep===4){
+    if(!document.getElementById('pago-sub').value.trim()){ toast('Ingresa el subtotal del recibo de pago','err'); return false; }
+    if(!document.getElementById('nd-imparcialidad').value){ toast('Selecciona la identificación de riesgos de imparcialidad','err'); return false; }
     return true;
   }
   return true;
