@@ -434,6 +434,7 @@ function openNuevo(){
   document.getElementById('mf-nuevo').classList.add('open');
   initGPSonFormOpen();
   fillEquipoPatron();
+  autoAsignarFolioDict(); // ← AUTO-ASIGNA el menor folio de dictamen disponible
 }
 
 function closeNuevo(){
@@ -819,6 +820,21 @@ function calcTotales(){
   document.getElementById('pago-sub').value=total_sub?total_sub.toFixed(2):'';
   document.getElementById('pago-iva').value=iva?iva.toFixed(2):'';
   document.getElementById('pago-total').value=tot?tot.toFixed(2):'';
+}
+
+/* ══ AUTO-ASIGNAR FOLIO DICTAMEN ══ */
+function autoAsignarFolioDict(){
+  const ini=SESSION.fdIni, fin=SESSION.fdFin;
+  if(!ini||!fin) return;
+  const usados=new Set(registros.map(r=>parseInt(r.folioDict)).filter(n=>!isNaN(n)));
+  for(let n=ini;n<=fin;n++){
+    if(!usados.has(n)){
+      const el=document.getElementById('nd-folio-dict');
+      if(el) el.value=String(n);
+      validFolioDict();
+      return;
+    }
+  }
 }
 
 /* ══ VALIDAR FOLIO ══ */
