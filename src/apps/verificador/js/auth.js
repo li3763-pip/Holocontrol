@@ -5,7 +5,7 @@ const USUARIOS = [
     inv:{ dict:48, s1:25, s2:10, an:8, uva:30 },
     fdIni:100, fdFin:147, fs1:'S10000100→S10000124', fs2:'S20000050→S20000059', fan:'AN0000010→AN0000017',
     fuva:'UVA26001→UVA26030',
-    equipoPatron:{ m:'M01', c:'C01', d:'D01', v:'V001' } },
+    equipoPatron:{ m:'M01', c:'C01', d:'D01', v:['V001','V002','V003','V004','V005','V006','V007','V008','V009','V010'] } },
   { user:'verif2', pass:'campo123', nombre:'Laura Mendoza', socio:'Socio B', zona:'Zona Sur',
     inv:{ dict:62, s1:40, s2:0, an:0, uva:15 },
     fdIni:200, fdFin:261, fs1:'S10000200→S10000239', fs2:'—', fan:'—',

@@ -277,7 +277,9 @@ function renderPerf(){
 /* Estado de modo rango por tipo de equipo patrón */
 const epRangoMode={m:false,c:false,d:false,v:false};
 
-/* Alterna entre modo único y modo rango para el tipo k (m|c|d|v). */
+/* Alterna entre modo único y modo rango para el tipo k (m|c|d|v).
+   Al activar el rango pre-selecciona el primer y último equipo asignado
+   como valores predeterminados de "desde" y "hasta". */
 function epToggleRango(k){
   epRangoMode[k]=!epRangoMode[k];
   const sel=document.getElementById('ep-'+k);
@@ -286,6 +288,18 @@ function epToggleRango(k){
   if(rngDiv) rngDiv.style.display=epRangoMode[k]?'block':'none';
   const btn=document.getElementById('ep-lbl-'+k)?.querySelector('.ep-rng-toggle');
   if(btn) btn.textContent=epRangoMode[k]?'↩ Único':'↔ Rango';
+  // Al activar modo rango, pre-llenar desde=primero y hasta=último si aún no se han elegido
+  if(epRangoMode[k]){
+    const desdeEl=document.getElementById('ep-'+k+'-desde');
+    const hastaEl=document.getElementById('ep-'+k+'-hasta');
+    if(desdeEl&&hastaEl){
+      const opts=Array.from(desdeEl.options, o=>o.value).filter(Boolean);
+      if(opts.length>0){
+        if(!desdeEl.value) desdeEl.value=opts[0];
+        if(!hastaEl.value) hastaEl.value=opts[opts.length-1];
+      }
+    }
+  }
 }
 
 /* Devuelve el valor efectivo del equipo patrón para el tipo k:
