@@ -5,17 +5,17 @@ const USUARIOS = [
     inv:{ dict:48, s1:25, s2:10, an:8, uva:30 },
     fdIni:100, fdFin:147, fs1:'S10000100→S10000124', fs2:'S20000050→S20000059', fan:'AN0000010→AN0000017',
     fuva:'UVA26001→UVA26030',
-    equipoPatron:{ m:['M01','M02','M03'], c:['C01','C02'], d:['D01','D02'], v:['V001','V002','V003','V004','V005','V006','V007','V008','V009','V010'] } },
+    equipoPatron:{ m:'M01', c:'C01', d:'D01', v:'V001' } },
   { user:'verif2', pass:'campo123', nombre:'Laura Mendoza', socio:'Socio B', zona:'Zona Sur',
     inv:{ dict:62, s1:40, s2:0, an:0, uva:15 },
     fdIni:200, fdFin:261, fs1:'S10000200→S10000239', fs2:'—', fan:'—',
     fuva:'UVA26101→UVA26115',
-    equipoPatron:{ m:'M02', c:'', d:['D02','D03'], v:['V100','V101','V102','V103','V104','V105'] } },
+    equipoPatron:{ m:'M02', c:'', d:'D02', v:'V100' } },
   { user:'verif3', pass:'campo123', nombre:'Héctor Sosa', socio:'Socio A', zona:'Zona Centro',
     inv:{ dict:15, s1:8, s2:5, an:3, uva:0 },
     fdIni:400, fdFin:414, fs1:'S10000300→S10000307', fs2:'S20000100→S20000104', fan:'AN0000050→AN0000052',
     fuva:'—',
-    equipoPatron:{ m:'M03', c:'C02', d:'', v:['V200','V201','V202','V203'] } },
+    equipoPatron:{ m:'M03', c:'C02', d:'', v:'V200' } },
 ];
 
 /* Normaliza un objeto equipoPatron {m,c,d,v} de valores únicos a arrays por tipo. */
