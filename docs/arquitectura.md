@@ -59,7 +59,8 @@ Holocontrol/
 │   │           ├── verificadores.js  # Stub → ver usuarios.js
 │   │           ├── socios.js      # Stub → ver usuarios.js
 │   │           ├── proveedores.js # Stub → ver usuarios.js
-│   │           └── papeleria.js   # Stub → ver usuarios.js
+│   │           ├── papeleria.js   # Stub → ver usuarios.js
+│   │           └── equipo_patron.js  # Catálogo y asignación de equipo patrón
 └── docs/
     ├── arquitectura.md            # Este archivo
     └── flujo-verificacion.md      # Flujo del proceso de verificación
@@ -108,6 +109,13 @@ Módulo principal de la app verificador. Contiene:
 - Funciones de renderizado (`renderHome`, `renderHist`, `renderPerf`)
 - Gestión de dictámenes (`openNuevo`, `guardarDictamen`, etc.)
 - Gestión de instrumentos y hologramas
+
+### `src/apps/admin/js/equipo_patron.js`
+Módulo de catálogo y asignación de equipo patrón. Contiene:
+- `EQUIPO_PATRON_CATALOG` — catálogo con todos los equipos (M, C, D, V, MF, CF, DF, VF)
+- Renderizado de la tabla de equipos disponibles
+- Modales para asignar equipos individuales y por rango a verificadores
+- Validación de permisos por rol (socio / administrador)
 
 ### `src/apps/admin/js/usuarios.js`
 Módulo principal del panel administrativo. Contiene toda la lógica de:
