@@ -894,13 +894,25 @@ function togImp(el,val){
 /* ══ FOTO ══ */
 function prevPhoto(input){
   if(input.files&&input.files[0]){
-    const r=new FileReader();
-    r.onload=e=>{
-      document.getElementById('photo-img').src=e.target.result;
+    const url=URL.createObjectURL(input.files[0]);
+    const img=new Image();
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const MAX=1280;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){
+        if(w>=h){h=Math.round(h*MAX/w);w=MAX;}
+        else{w=Math.round(w*MAX/h);h=MAX;}
+      }
+      const c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      document.getElementById('photo-img').src=c.toDataURL('image/jpeg',0.82);
       document.getElementById('photo-prev').style.display='block';
       document.getElementById('cam-btn').style.display='none';
     };
-    r.readAsDataURL(input.files[0]);
+    img.onerror=()=>URL.revokeObjectURL(url);
+    img.src=url;
   }
 }
 
