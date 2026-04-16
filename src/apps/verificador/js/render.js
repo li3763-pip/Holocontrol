@@ -699,6 +699,7 @@ function syncDictRows(){
     {id:'dr',lbl:'Repetibilidad'},
     {id:'dx',lbl:'Excentricidad'},
   ];
+  const opts=`<option value="">—</option><option value="C">C — Conforme</option><option value="NC">NC — No conforme</option><option value="NA">NA — No aplica</option>`;
   container.innerHTML=instrBuffer.map((ins,i)=>`
     <div class="dict-card">
       <div class="dict-card-hd">
@@ -708,43 +709,46 @@ function syncDictRows(){
       </div>
       <div class="dict-checks-grid">
         ${checkFields.map(f=>`
-          <div class="dict-check-fld">
-            <div class="dict-check-lbl">${f.lbl}</div>
-            <div class="dict-btn-group" id="${f.id}g-${i}">
-              ${['C','NC','NA'].map(v=>`<button type="button" class="dict-btn" data-val="${v}" onclick="setDictVal('${f.id}-${i}','${v}')">${v}</button>`).join('')}
-            </div>
-            <input type="hidden" id="${f.id}-${i}" value="">
+          <div class="dict-fld">
+            <label>${f.lbl}</label>
+            <select class="fi" id="${f.id}-${i}" onchange="onDictChange('${f.id}',${i})">${opts}</select>
           </div>
         `).join('')}
       </div>
       <div class="dict-result-fld">
-        <div class="dict-check-lbl">Cumple NOM-010</div>
-        <div class="dict-btn-group dict-btn-group-result" id="dcg-${i}">
-          <button type="button" class="dict-btn dict-btn-result" data-val="C"  onclick="setDictVal('dc-${i}','C')">✓ Cumple</button>
-          <button type="button" class="dict-btn dict-btn-result" data-val="NC" onclick="setDictVal('dc-${i}','NC')">✗ No Cumple</button>
-          <button type="button" class="dict-btn dict-btn-result" data-val="NA" onclick="setDictVal('dc-${i}','NA')">— NA</button>
-        </div>
-        <input type="hidden" id="dc-${i}" value="">
+        <label class="dict-check-lbl">Cumple NOM-010</label>
+        <select class="fi dict-result-sel" id="dc-${i}" onchange="dictResultColor(this)">
+          <option value="">— Seleccionar —</option>
+          <option value="C">✓ Cumple</option>
+          <option value="NC">✗ No Cumple</option>
+          <option value="NA">NA — No aplica</option>
+        </select>
       </div>
     </div>
   `).join('');
 }
 
+function onDictChange(fieldId, instrIdx){
+  setDictVal(fieldId+'-'+instrIdx, document.getElementById(fieldId+'-'+instrIdx).value);
+}
+
 function setDictVal(id, val){
-  const input=document.getElementById(id);
-  if(!input) return;
-  input.value=val;
-  // Derive group element id: dv-0 → dvg-0, dc-0 → dcg-0
-  const grpId=id.replace(/^([^-]+)-/,'$1g-');
-  const grp=document.getElementById(grpId);
-  if(grp){
-    grp.querySelectorAll('.dict-btn').forEach(btn=>{
-      btn.classList.remove('sel-c','sel-nc','sel-na');
-      if(btn.dataset.val===val) btn.classList.add(val==='C'?'sel-c':val==='NC'?'sel-nc':'sel-na');
-    });
-  }
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.value=val;
   // autoNC: Insp. Visual NC → Cumple NOM-010 = NC
-  if(id.startsWith('dv-') && val==='NC') setDictVal('dc-'+id.split('-')[1],'NC');
+  if(id.startsWith('dv-') && val==='NC'){
+    const idx=id.split('-')[1];
+    const dc=document.getElementById('dc-'+idx);
+    if(dc && !dc.value){ dc.value='NC'; dictResultColor(dc); }
+  }
+}
+
+function dictResultColor(sel){
+  sel.classList.remove('val-c','val-nc','val-na');
+  if(sel.value==='C') sel.classList.add('val-c');
+  else if(sel.value==='NC') sel.classList.add('val-nc');
+  else if(sel.value==='NA') sel.classList.add('val-na');
 }
 
 /* ══ HOLOGRAMAS: uno por instrumento ══ */
