@@ -4,7 +4,7 @@
   "description": "Aplicación de verificación de básculas conforme a NOM-010-SCFI-1994",
   "start_url": "/Holocontrol/src/apps/verificador/index.html",
   "scope": "/Holocontrol/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0F0E11",
   "theme_color": "#C23B6B",
