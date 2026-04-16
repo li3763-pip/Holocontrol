@@ -911,7 +911,7 @@ function prevPhoto(input){
       document.getElementById('photo-prev').style.display='block';
       document.getElementById('cam-btn').style.display='none';
     };
-    img.onerror=()=>URL.revokeObjectURL(url);
+    img.onerror=()=>{URL.revokeObjectURL(url);toast('No se pudo cargar la imagen','err');};
     img.src=url;
   }
 }
