@@ -60,9 +60,27 @@ Agregar al inicio del celular:
 
 ## Cómo generar el APK (Android)
 
-La app es una PWA (Progressive Web App). La forma más sencilla de obtener un APK es mediante **PWABuilder** o **Bubblewrap**, que envuelven la PWA en una TWA (Trusted Web Activity).
+### Opción A — App Android nativa (proyecto incluido en este repositorio)
 
-### Opción A — PWABuilder (sin instalar nada)
+El directorio `android/` contiene un proyecto Android Studio completo con un WebView que empaqueta la app. No requiere duplicar archivos.
+
+1. Abre Android Studio → **File → Open…** → selecciona la carpeta `android/`.
+2. Conecta un dispositivo o inicia un emulador (Android 7.0+).
+3. Haz clic en **Run ▶**, o desde la terminal:
+
+```bash
+cd android
+./gradlew assembleDebug
+# APK: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Consulta `android/README.md` para más detalles.
+
+---
+
+La app también es una PWA. Las opciones siguientes generan una TWA (requiere URL pública con HTTPS):
+
+### Opción B — PWABuilder (sin instalar nada)
 
 1. Asegúrate de que GitHub Pages esté habilitado para el repositorio.  
    URL pública: `https://li3763-pip.github.io/Holocontrol/src/apps/verificador/index.html`
@@ -70,7 +88,7 @@ La app es una PWA (Progressive Web App). La forma más sencilla de obtener un AP
 3. Pega la URL de GitHub Pages y haz clic en **Start**.
 4. Descarga el paquete Android → genera el APK firmado listo para instalar.
 
-### Opción B — Bubblewrap (línea de comandos)
+### Opción C — Bubblewrap (línea de comandos)
 
 Requiere Node.js ≥ 14 y Android SDK.
 
