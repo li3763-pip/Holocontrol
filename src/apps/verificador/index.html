@@ -20,6 +20,12 @@
 <body>
 <div class="app">
 <div class="toast" id="toast"></div>
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--accent);color:#fff;padding:12px 14px;align-items:center;gap:10px;font-size:13px;font-family:var(--sans)">
+  <svg style="flex-shrink:0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v13M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+  <span style="flex:1">Instala la app para pantalla completa sin barra de direcciones</span>
+  <button onclick="installApp()" style="background:#fff;color:var(--accent);border:none;border-radius:6px;padding:6px 12px;font-weight:700;font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap">Instalar</button>
+  <button onclick="document.getElementById('install-banner').style.display='none'" style="background:none;border:none;color:#fff;cursor:pointer;padding:4px;line-height:1;font-size:18px">✕</button>
+</div>
 
 <!-- ══════════════ LOGIN ══════════════ -->
 <div class="screen active" id="sc-login">
@@ -544,6 +550,34 @@ if ('serviceWorker' in navigator) {
   });
 }
 (function () {
+  // PWA install prompt
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Only show banner if NOT already running as standalone PWA
+    // navigator.standalone covers iOS Safari; matchMedia covers Chrome/Android
+    if (!window.matchMedia('(display-mode: standalone)').matches && !navigator.standalone) {
+      var banner = document.getElementById('install-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+  });
+  window.addEventListener('appinstalled', function () {
+    var banner = document.getElementById('install-banner');
+    if (banner) banner.style.display = 'none';
+    deferredPrompt = null;
+  });
+  window.installApp = function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function () {
+      deferredPrompt = null;
+      var banner = document.getElementById('install-banner');
+      if (banner) banner.style.display = 'none';
+    });
+  };
+
+  // Fullscreen API - enter on first interaction and re-enter if exited
   function pedirPantallaCompleta() {
     var el = document.documentElement;
     var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
@@ -551,8 +585,19 @@ if ('serviceWorker' in navigator) {
       fn.call(el).catch(function () {});
     }
   }
-  document.addEventListener('touchstart', pedirPantallaCompleta, { once: true });
-  document.addEventListener('click', pedirPantallaCompleta, { once: true });
+  function registrarListeners() {
+    document.addEventListener('touchstart', pedirPantallaCompleta, { once: true });
+    document.addEventListener('click', pedirPantallaCompleta, { once: true });
+  }
+  registrarListeners();
+  // Re-register listeners when user exits fullscreen so it re-enters on next tap
+  function alCambiarFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      registrarListeners();
+    }
+  }
+  document.addEventListener('fullscreenchange', alCambiarFullscreen);
+  document.addEventListener('webkitfullscreenchange', alCambiarFullscreen);
 })();
 </script>
 </body>
