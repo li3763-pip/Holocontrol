@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--
+        Permite compartir imágenes guardadas en la carpeta privada Pictures de la app
+        (getExternalFilesDir(Environment.DIRECTORY_PICTURES)).
+        Necesario para que el FileProvider genere URIs que la aplicación de cámara
+        del sistema pueda escribir y el WebView pueda leer.
+    -->
+    <external-files-path name="app_pictures" path="Pictures/" />
+</paths>
+

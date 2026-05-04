@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
+<meta name="theme-color" content="#7B1C3A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HoloVerifica">
+<title>HoloVerifica — NOM-010</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="../../shared/assets/fonts.css">
+<link rel="stylesheet" href="../../shared/css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/screens.css">
+</head>
+<body>
+<div class="app">
+<div class="toast" id="toast"></div>
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--accent);color:#fff;padding:12px 14px;align-items:center;gap:10px;font-size:13px;font-family:var(--sans)">
+  <svg style="flex-shrink:0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v13M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+  <span style="flex:1">Instala la app para pantalla completa sin barra de direcciones</span>
+  <button onclick="installApp()" style="background:#fff;color:var(--accent);border:none;border-radius:6px;padding:6px 12px;font-weight:700;font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap">Instalar</button>
+  <button onclick="document.getElementById('install-banner').style.display='none'" style="background:none;border:none;color:#fff;cursor:pointer;padding:4px;line-height:1;font-size:18px">✕</button>
+</div>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div class="screen active" id="sc-login">
+  <div class="lg-glow"></div>
+  <div style="text-align:center;margin-bottom:6px">
+    <div class="lg-icon">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    </div>
+    <div class="lg-title">Holo<span>Verifica</span></div>
+    <div class="lg-sub">Verificadores de campo</div>
+  </div>
+  <div class="lg-nom">NOM-010-SCFI-1994 · Servicio de inspección de básculas</div>
+  <div class="lg-form">
+    <div class="lg-field">
+      <label>Usuario</label>
+      <input type="text" id="l-user" placeholder="tu.usuario" autocomplete="username" autocapitalize="none">
+    </div>
+    <div class="lg-field">
+      <label>Contraseña</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="lg-err" id="l-err">Usuario o contraseña incorrectos</div>
+    <button class="btn-lg" onclick="doLogin()">Entrar al sistema</button>
+  </div>
+  <div style="margin-top:24px;font-size:10px;color:var(--text3);text-align:center;letter-spacing:.06em">v2.5.0 · RC-38 r1</div>
+</div>
+
+<!-- ══════════════ APP PRINCIPAL ══════════════ -->
+<div class="screen" id="sc-app">
+  <div class="topbar">
+    <div class="tb-logo">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    </div>
+    <div class="tb-info">
+      <div class="tb-name" id="tb-name">—</div>
+      <div class="tb-sub" id="tb-sub">—</div>
+    </div>
+    <button class="tb-btn" onclick="doSync()" title="Sincronizar">
+      <svg id="sync-icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
+    <button class="tb-btn" onclick="doLogout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- TAB HOME -->
+  <div class="scroll" id="tab-home">
+    <div class="stats">
+      <div class="stat g"><div class="stat-v" id="st-hoy">0</div><div class="stat-l">Hoy</div></div>
+      <div class="stat a"><div class="stat-v" id="st-pend">0</div><div class="stat-l">Por sync</div></div>
+      <div class="stat p"><div class="stat-v" id="st-tot">0</div><div class="stat-l">Total</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Mi inventario asignado</div>
+      <div class="inv-grid">
+        <div class="inv-pill hi">
+          <div><div class="inv-pill-l">Dictámenes</div><div style="font-size:9px;color:var(--text3)">disponibles</div></div>
+          <div class="inv-pill-v" id="inv-dict">—</div>
+        </div>
+        <div class="inv-pill hg">
+          <div><div class="inv-pill-l">Hologr. S1</div><div style="font-size:9px;color:var(--text3)">disponibles</div></div>
+          <div class="inv-pill-v" id="inv-s1">—</div>
+        </div>
+        <div class="inv-pill">
+          <div><div class="inv-pill-l">Hologr. S2</div><div style="font-size:9px;color:var(--text3)">disponibles</div></div>
+          <div class="inv-pill-v" id="inv-s2">—</div>
+        </div>
+        <div class="inv-pill">
+          <div><div class="inv-pill-l">Hologr. AN</div><div style="font-size:9px;color:var(--text3)">disponibles</div></div>
+          <div class="inv-pill-v" id="inv-an">—</div>
+        </div>
+        <div class="inv-pill">
+          <div><div class="inv-pill-l">UVA Estándar</div><div style="font-size:9px;color:var(--text3)">disponibles</div></div>
+          <div class="inv-pill-v" id="inv-uva">—</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Últimos dictámenes</div>
+    <div id="home-list"></div>
+  </div>
+
+  <!-- TAB HISTORIAL -->
+  <div class="scroll" id="tab-hist" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input class="fi" style="flex:1" placeholder="Buscar cliente, folio, RFC..." id="hist-q" oninput="renderHist()">
+      <select class="fi" id="hist-f" onchange="renderHist()" style="width:auto;min-width:90px">
+        <option value="">Todos</option>
+        <option value="ok">Guardados</option>
+        <option value="sync">Sincronizados</option>
+      </select>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+
+  <!-- TAB PERFIL -->
+  <div class="scroll" id="tab-perf" style="display:none">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0" id="p-av">V</div>
+        <div>
+          <div style="font-size:16px;font-weight:600" id="p-name">—</div>
+          <div style="font-size:11px;color:var(--accent);margin-top:2px">Verificador NOM-010</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px" id="p-socio">—</div>
+        </div>
+      </div>
+      <div id="p-stats"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Folios asignados</div>
+      <div id="p-folios"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Sistema</div>
+      <div class="irow"><div class="irow-l">Versión</div><div class="irow-v">v2.5.0 RC-38 r1</div></div>
+      <div class="irow"><div class="irow-l">Última sync</div><div class="irow-v mono" id="p-sync">—</div></div>
+      <div class="irow"><div class="irow-l">Registros locales</div><div class="irow-v g" id="p-local">0</div></div>
+    </div>
+    <div style="margin-top:8px"><button class="btn btn-g" style="width:100%;padding:13px" onclick="doLogout()">Cerrar sesión</button></div>
+  </div>
+
+  <div class="bnav">
+    <button class="bnav-btn on" id="bn-home" onclick="goTab('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Inicio</span>
+    </button>
+    <div class="bnav-fab-wrap">
+      <button class="bnav-fab" onclick="openNuevo()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <button class="bnav-btn" id="bn-hist" onclick="goTab('hist')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Historial</span>
+    </button>
+  </div>
+</div>
+
+</div>
+
+<!-- ══════════════ MODAL NUEVO DICTAMEN ══════════════ -->
+<div class="mf" id="mf-nuevo">
+  <div class="mf-head">
+    <button class="mf-close" onclick="closeNuevo()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="mf-title">Nueva solicitud de inspección</div>
+    <div class="mf-folio" id="nd-folio-lbl">—</div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="nd-prog" style="width:25%"></div></div>
+  <div class="steps-row">
+    <div class="sdot on" id="sd1"></div>
+    <div class="sdot" id="sd2"></div>
+    <div class="sdot" id="sd3"></div>
+    <div class="sdot" id="sd4"></div>
+  </div>
+  <div class="mf-body" id="nd-body">
+
+    <!-- ── PASO 1: SOLICITUD (datos del cliente) ── -->
+    <div id="nd-s1">
+      <div class="sec-lbl">Solicitud de inspección · Datos del cliente</div>
+      <div class="fld">
+        <label>Nombre / Razón social y R.F.C.</label>
+        <input class="fi" id="nd-razon" placeholder="Razón social o nombre completo">
+      </div>
+      <div class="fgrid">
+        <div class="fld">
+          <label>Giro</label>
+          <select class="fi" id="nd-giro" onchange="onGiroChange(this.value)">
+            <option value="">Seleccionar</option>
+            <option>Abarrotes</option>
+            <option>Miscelánea</option>
+            <option>Dulcería</option>
+            <option>Carnicería</option>
+            <option>Vísceras</option>
+            <option>Pollería</option>
+            <option>Verdulería</option>
+            <option>Frutería</option>
+            <option>Semillas y chiles secos</option>
+            <option>Desperdicio Industrial/Chatarrera</option>
+            <option>Joyería</option>
+            <option>Empeños</option>
+            <option>Tortillería/Molino</option>
+            <option>Materias Primas</option>
+            <option>Taquería</option>
+            <option>Ferretería/Tlapalería/Metales</option>
+            <option>Casa de Materiales</option>
+            <option>Paquetería</option>
+            <option>Lavandería/Tintorería</option>
+            <option>Pescados y mariscos</option>
+            <option value="Otro">Otro</option>
+          </select>
+          <input class="fi" id="nd-giro-otro" placeholder="Especifica el giro" style="display:none;margin-top:6px">
+        </div>
+        <div class="fld">
+          <label>Fecha solicitud</label>
+          <input class="fi" type="date" id="nd-fecha-sol">
+        </div>
+      </div>
+      <!-- C.P. → trigger API -->
+      <div class="fgrid">
+        <div class="fld" style="position:relative">
+          <label>C.P. <span id="cp-status" style="font-size:9px;margin-left:4px"></span></label>
+          <input class="fi mono" id="nd-cp" placeholder="06600" maxlength="5" inputmode="numeric"
+            oninput="onCPInput(this.value)">
+        </div>
+        <div class="fld">
+          <label>Colonia</label>
+          <select class="fi" id="nd-colonia" disabled style="color:var(--text3)">
+            <option value="">Ingresa C.P. primero...</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld">
+        <label>Calle y número</label>
+        <input class="fi" id="nd-calle" placeholder="Av. Insurgentes 1234">
+      </div>
+      <div class="fgrid">
+        <div class="fld">
+          <label>Alcaldía / Municipio</label>
+          <input class="fi" id="nd-muni" placeholder="Auto desde C.P." readonly
+            style="background:var(--surface3);color:var(--text2)">
+        </div>
+        <div class="fld">
+          <label>Entidad federativa</label>
+          <input class="fi" id="nd-entidad-txt" placeholder="Auto desde C.P." readonly
+            style="background:var(--surface3);color:var(--text2)">
+          <input type="hidden" id="nd-entidad" value="">
+        </div>
+      </div>
+      <div class="fld">
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="flex-shrink:0">Coordenadas UTM <span id="utm-status" style="font-size:9px;margin-left:4px"></span></span>
+          <button type="button" onclick="obtenerUTM()" id="btn-gps"
+            style="background:linear-gradient(135deg,var(--blue),#2d6db5);border:none;border-radius:6px;
+                   padding:5px 11px;font-size:10px;font-weight:600;color:#fff;
+                   cursor:pointer;display:flex;align-items:center;gap:4px;font-family:var(--sans);
+                   white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(74,158,224,.3)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            </svg>
+            Obtener ubicación
+          </button>
+        </label>
+        <input class="fi mono" id="nd-utm" placeholder="Toca 'Obtener ubicación' o captura manual"
+          style="font-size:11px">
+        <div id="utm-coords-raw" style="display:none;font-size:9px;color:var(--text3);margin-top:4px;font-family:var(--mono)"></div>
+      </div>
+    </div>
+
+    <!-- ── PASO 2: DATOS DE LOS INSTRUMENTOS ── -->
+    <div id="nd-s2" style="display:none">
+      <div class="sec-lbl">Datos de los instrumentos para pesar</div>
+
+      <!-- Lista de instrumentos agregados -->
+      <div id="instr-list"></div>
+
+      <!-- Botón agregar -->
+      <button class="add-instr-btn" onclick="abrirFormInstr()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar instrumento
+      </button>
+
+      <!-- Mini-form inline para capturar un instrumento -->
+      <div id="instr-form" style="display:none">
+        <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:var(--r);padding:14px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+            <span id="instr-form-title">Instrumento #1</span>
+            <button onclick="cancelarFormInstr()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1">×</button>
+          </div>
+
+          <!-- ① DGN — dato principal -->
+          <div class="fld" style="position:relative">
+            <label style="display:flex;align-items:center;gap:6px">
+              <span style="background:var(--accent);color:#fff;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">1</span>
+              Aprobación de modelo / DGN
+            </label>
+            <input class="fi mono" id="if-dgn-search" placeholder="Ej: DGN.312.01.2009.3153" autocomplete="off"
+              oninput="buscarPorDGN(this.value)" style="font-size:12px;letter-spacing:.02em">
+            <!-- Panel resultado DGN -->
+            <div id="dgn-result" style="display:none;background:var(--surface3);border:1px solid var(--green);border-radius:8px;padding:10px 12px;margin-top:8px">
+              <div style="font-size:9px;color:var(--green);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">✓ Encontrado en catálogo NOM-010</div>
+              <div id="dgn-result-body"></div>
+              <button onclick="aplicarDGN()" class="btn btn-success" style="width:100%;padding:9px;font-size:12px;margin-top:8px">
+                Usar estos datos →
+              </button>
+            </div>
+            <div id="dgn-notfound" style="display:none;background:var(--amber-bg);border:1px solid var(--amber);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:11px;color:var(--amber)">
+              ⚠ DGN no encontrado en catálogo — captura los datos manualmente
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+
+          <!-- ② Marca y Modelo (con autocomplete, prerellenados desde DGN) -->
+          <div class="fld">
+            <label style="display:flex;align-items:center;gap:6px">
+              <span style="background:var(--surface3);color:var(--text3);border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">2</span>
+              Marca <span style="color:var(--blue);font-size:9px;font-weight:600;margin-left:4px">· NOM-010</span>
+            </label>
+            <div style="position:relative">
+              <input class="fi" id="if-marca" placeholder="Escribe la marca o selecciona del catálogo..." autocomplete="off"
+                oninput="filtrarMarcas(this.value)" onfocus="filtrarMarcas(this.value)" onblur="setTimeout(()=>cerrarMarcas(),180)">
+              <div id="marca-drop" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--surface);border:1px solid var(--accent);border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 8px 20px rgba(0,0,0,.4)"></div>
+            </div>
+          </div>
+
+          <div class="fld">
+            <label>Modelo</label>
+            <div style="position:relative">
+              <input class="fi" id="if-modelo" placeholder="Selecciona marca primero o escribe el modelo..." autocomplete="off"
+                oninput="filtrarModelos(this.value)" onfocus="filtrarModelos(this.value)" onblur="setTimeout(()=>cerrarModelos(),180)">
+              <div id="modelo-drop" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--surface);border:1px solid var(--border2);border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 8px 20px rgba(0,0,0,.4)"></div>
+            </div>
+          </div>
+
+          <!-- ③ N° serie y datos técnicos -->
+          <div class="fld">
+            <label style="display:flex;align-items:center;gap:6px">
+              <span style="background:var(--surface3);color:var(--text3);border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">3</span>
+              N° de serie
+            </label>
+            <input class="fi mono" id="if-serie" placeholder="Número de serie del instrumento" oninput="this.value=this.value.toUpperCase()">
+          </div>
+
+          <div class="fgrid">
+            <div class="fld">
+              <label>Máx <span style="color:var(--green);font-size:9px">· auto catálogo</span></label>
+              <input class="fi" id="if-max" placeholder="Ej: 15 kg">
+            </div>
+            <div class="fld">
+              <label>e <span style="color:var(--green);font-size:9px">· auto catálogo</span></label>
+              <input class="fi" id="if-e" placeholder="Ej: 5 g">
+            </div>
+          </div>
+
+          <div class="fgrid">
+            <div class="fld">
+              <label>Tipo</label>
+              <select class="fi" id="if-tipo">
+                <option value="">Seleccionar</option>
+                <option value="M">M — Mecánico</option>
+                <option value="E">E — Electrónico</option>
+                <option value="H">H — Híbrido</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>Período</label>
+              <select class="fi" id="if-periodo">
+                <option value="">Seleccionar</option>
+                <option value="A">A — Anual</option>
+                <option value="S">S — Semestral</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fgrid">
+            <div class="fld">
+              <label>Clase de exactitud</label>
+              <select class="fi" id="if-clase">
+                <option value="">Seleccionar</option>
+                <option>I</option><option>II</option><option>III</option><option>IIII</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>I / P / E</label>
+              <select class="fi" id="if-ipe">
+                <option value="">Seleccionar</option>
+                <option value="I">I — Inicial</option>
+                <option value="P">P — Periódica</option>
+                <option value="E">E — Extraordinaria</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="instr-form-err" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none"></div>
+          <button class="btn btn-p" onclick="guardarInstr()" style="width:100%">+ Agregar instrumento</button>
+        </div>
+      </div>
+
+      <div class="fld" style="margin-top:4px">
+        <label>Observaciones (RC-07)</label>
+        <textarea class="fi" id="nd-obs" rows="3" placeholder="Condiciones del instrumento, instalación, irregularidades..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── PASO 3: DICTAMEN DE INSPECCIÓN ── -->
+    <div id="nd-s3" style="display:none">
+      <div class="sec-lbl">Dictamen de inspección · NOM-010-SCFI-1994</div>
+      <div class="fgrid" style="margin-bottom:12px">
+        <div class="fld" style="margin-bottom:0">
+          <label>Folio dictamen (Nº)</label>
+          <input class="fi mono" id="nd-folio-dict" placeholder="3335" oninput="validFolioDict()" inputmode="numeric">
+          <div id="nd-fdict-err" style="font-size:10px;color:var(--red);margin-top:4px;display:none"></div>
+        </div>
+        <div class="fld" style="margin-bottom:0">
+          <label>Fecha dictamen</label>
+          <input class="fi" type="date" id="nd-fecha-dict">
+        </div>
+      </div>
+
+      <!-- Cards dictamen por instrumento -->
+      <div id="dict-cards-container" style="margin-bottom:14px"></div>
+
+      <!-- Folios de hologramas -->
+      <div class="sec-lbl" style="margin-top:4px">Folio de hologramas</div>
+      <div class="holo-block">
+        <div class="holo-block-hd">Por instrumento inspeccionado</div>
+        <div id="holo-rows-container"></div>
+      </div>
+
+      <!-- Equipo patrón -->
+      <div class="sec-lbl">Equipo patrón — Identificación</div>
+      <div id="ep-nota" style="font-size:11px;color:var(--text3);margin-bottom:8px;display:none">
+        🔒 Solo puedes usar los equipos patrón que tienes asignados.
+      </div>
+      <div class="fgrid">
+        <div class="fld">
+          <label id="ep-lbl-m">M (Marco)</label>
+          <select class="fi mono" id="ep-m"></select>
+          <div id="ep-rng-m" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-m-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-m-hasta"></select>
+          </div>
+        </div>
+        <div class="fld">
+          <label id="ep-lbl-c">C (Cinco)</label>
+          <select class="fi mono" id="ep-c"></select>
+          <div id="ep-rng-c" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-c-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-c-hasta"></select>
+          </div>
+        </div>
+        <div class="fld">
+          <label id="ep-lbl-d">D (Diez)</label>
+          <select class="fi mono" id="ep-d"></select>
+          <div id="ep-rng-d" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-d-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-d-hasta"></select>
+          </div>
+        </div>
+        <div class="fld">
+          <label id="ep-lbl-v">V (Veinte)</label>
+          <select class="fi mono" id="ep-v"></select>
+          <div id="ep-rng-v" style="display:none;margin-top:4px">
+            <select class="fi mono" id="ep-v-desde" style="margin-bottom:4px"></select>
+            <div style="text-align:center;font-size:10px;color:var(--text3);padding:2px 0">— hasta —</div>
+            <select class="fi mono" id="ep-v-hasta"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PASO 4: RECIBO DE PAGO Y EVIDENCIA ── -->
+    <div id="nd-s4" style="display:none">
+      <div class="sec-lbl">Recibo de pago</div>
+      <div id="pago-rows-container"></div>
+      <div class="fgrid" style="margin-bottom:4px">
+        <div class="fld"><label>Subtotal</label><input class="fi mono" id="pago-sub" placeholder="$0.00" oninput="calcTotales()" inputmode="decimal"></div>
+        <div class="fld"><label>IVA (16%)</label><input class="fi mono" id="pago-iva" placeholder="$0.00" readonly style="opacity:.6"></div>
+      </div>
+      <div class="fld"><label>Total</label><input class="fi mono" id="pago-total" placeholder="$0.00" readonly style="font-size:16px;font-weight:700;color:var(--green)"></div>
+
+      <hr class="dv">
+      <div class="sec-lbl">Evidencia fotográfica por báscula</div>
+
+      <!-- Bloques per-instrumento generados por syncFotasRows() al entrar al paso 4.
+           Cada bloque incluye su propio <input type="file"> activado por <label for>,
+           que es la forma nativa y fiable de abrir el selector en Android WebView. -->
+      <div id="fotos-por-instrumento"></div>
+
+      <hr class="dv">
+      <div class="fld">
+        <label>Identificación de riesgos de imparcialidad</label>
+        <div class="check-row" id="imp-opts">
+          <div class="check-opt" onclick="togImp(this,'ninguna')">Sin riesgo</div>
+          <div class="check-opt" onclick="togImp(this,'familiaridad')">Familiaridad con cliente</div>
+          <div class="check-opt" onclick="togImp(this,'asesoria')">Asesoría brindada</div>
+        </div>
+        <input type="hidden" id="nd-imparcialidad" value="">
+      </div>
+      <div class="fld">
+        <label>Personal de apoyo</label>
+        <input class="fi" id="nd-apoyo" placeholder="Nombre del personal de apoyo (si aplica)">
+      </div>
+    </div>
+
+  </div>
+  <div class="mf-foot">
+    <button class="btn btn-g" id="nd-prev" onclick="ndPrev()" style="display:none;padding:13px 16px">← Atrás</button>
+    <button class="btn btn-p" id="nd-next" onclick="ndNext()">Siguiente →</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL DETALLE ══════════════ -->
+<div class="mf" id="mf-detail">
+  <div class="mf-head">
+    <button class="mf-close" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="mf-title">Dictamen de inspección</div>
+    <div class="mf-folio" id="det-folio">—</div>
+  </div>
+  <div class="mf-body" id="det-body"></div>
+</div>
+<script src="../../shared/js/catalog.js"></script>
+<script src="../../shared/js/utils.js"></script>
+<script src="../../shared/js/auth.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/instrumentos.js"></script>
+<script src="js/hologramas.js"></script>
+<script src="js/dictamen.js"></script>
+<script src="js/render.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
+(function () {
+  // PWA install prompt
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Only show banner if NOT already running as standalone PWA
+    // navigator.standalone covers iOS Safari; matchMedia covers Chrome/Android
+    if (!window.matchMedia('(display-mode: standalone)').matches && !navigator.standalone) {
+      var banner = document.getElementById('install-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+  });
+  window.addEventListener('appinstalled', function () {
+    var banner = document.getElementById('install-banner');
+    if (banner) banner.style.display = 'none';
+    deferredPrompt = null;
+  });
+  window.installApp = function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function () {
+      deferredPrompt = null;
+      var banner = document.getElementById('install-banner');
+      if (banner) banner.style.display = 'none';
+    });
+  };
+
+  // Fullscreen API - enter on first interaction and re-enter if exited
+  function pedirPantallaCompleta() {
+    var el = document.documentElement;
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (fn && !document.fullscreenElement && !document.webkitFullscreenElement) {
+      fn.call(el).catch(function () {});
+    }
+  }
+  function registrarListeners() {
+    document.addEventListener('touchstart', pedirPantallaCompleta, { once: true });
+    document.addEventListener('click', pedirPantallaCompleta, { once: true });
+  }
+  registrarListeners();
+  // Re-register listeners when user exits fullscreen so it re-enters on next tap
+  function alCambiarFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      registrarListeners();
+    }
+  }
+  document.addEventListener('fullscreenchange', alCambiarFullscreen);
+  document.addEventListener('webkitfullscreenchange', alCambiarFullscreen);
+})();
+</script>
+</body>
+</html>

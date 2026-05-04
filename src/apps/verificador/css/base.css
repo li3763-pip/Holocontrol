@@ -1,0 +1,32 @@
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#F4F2F3;--surface:#FFF;--surface2:#F0ECED;--surface3:#E8E3E5;
+  --border:#DDD5D7;--border2:#C4B8BB;
+  --accent:#7B1C2E;--accent2:#5C1020;--accent-glow:rgba(123,28,46,.18);
+  --green:#3A6B3A;--green-bg:#E8F5E8;
+  --amber:#7A4A0A;--amber-bg:#FDF0DC;
+  --red:#8B2020;--red-bg:#FDEAEA;
+  --blue:#7B1C2E;--blue-bg:#F5E8EB;
+  --purple:#5C2D6B;--purple-bg:#F0E8F5;
+  --text:#1A1217;--text2:#6B5A5E;--text3:#9C8A8E;
+  --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;
+  --r:12px;--rsm:8px;
+}
+
+html,body{height:100%;min-height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);overflow:hidden;font-size:14px}
+
+.app{display:flex;flex-direction:column;height:100vh;height:100svh;height:var(--app-h,100svh);min-height:100vh;min-height:100svh;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
+
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;height:100%}
+
+.screen.active{display:flex}
+
+
+/* ── SCROLL ── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px;transition:padding-bottom .3s ease}
+
+.scroll::-webkit-scrollbar{display:none}
