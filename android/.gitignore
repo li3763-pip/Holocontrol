@@ -1,0 +1,18 @@
+# Android build outputs
+.gradle/
+build/
+local.properties
+
+# Gradle wrapper JAR (downloaded automatically by Android Studio or `gradle wrapper`)
+gradle/wrapper/gradle-wrapper.jar
+
+# IDE files
+*.iml
+.idea/
+
+# Keystore files (never commit signing keys)
+*.jks
+*.keystore
+
+# DS_Store
+.DS_Store
