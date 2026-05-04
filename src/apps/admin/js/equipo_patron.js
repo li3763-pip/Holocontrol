@@ -166,6 +166,8 @@ function renderEquipoPatron(){
   });
 
   document.getElementById('ep-resumen-tbody').innerHTML=tbody||`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Sin datos.</td></tr>`;
+
+  renderEquiposAsignados();
 }
 
 /* ── ASIGNAR EQUIPO ── */
@@ -228,7 +230,11 @@ function guardarAsigEquipo(){
 function confirmarLiberarEquipo(equipoId){
   const asig=getAsigEquipo(equipoId);
   if(!asig)return;
-  if(!confirm(`¿Liberar equipo ${equipoId} asignado a ${asig.verificadorNombre}?`))return;
+  // Permiso: socio solo puede liberar equipos de sus propios verificadores
+  if(SESSION.rol==='socio'&&asig.socio!==SESSION.socio){
+    alert('Solo puedes desasignar equipos de tus propios verificadores.');return;
+  }
+  if(!confirm(`¿Desasignar equipo ${equipoId} de ${asig.verificadorNombre}?`))return;
   liberarEquipo(equipoId);
 }
 
@@ -236,6 +242,41 @@ function liberarEquipo(equipoId){
   asignacionesEquipo=asignacionesEquipo.filter(a=>a.equipoId!==equipoId);
   epSaveToStorage();
   renderEquipoPatron();
+}
+
+/* ── RENDER EQUIPOS ASIGNADOS ── */
+function renderEquiposAsignados(){
+  const tbody=document.getElementById('ep-asignados-tbody');
+  if(!tbody) return;
+
+  // socio solo ve sus propios equipos asignados
+  const asigs=SESSION.rol==='socio'
+    ? asignacionesEquipo.filter(a=>a.socio===SESSION.socio)
+    : asignacionesEquipo.slice();
+
+  if(asigs.length===0){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:16px">Sin equipos asignados actualmente.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=asigs.map(a=>{
+    const eq=EQUIPO_PATRON_CATALOG.find(e=>e.id===a.equipoId);
+    const claseChip=eq?(eq.clase==='M1'?`<span class="tipo-badge t-s1">M1</span>`:`<span class="tipo-badge t-s2">F2</span>`):'';
+    const canLiberate=SESSION.rol==='admin'||SESSION.rol==='personal'||(SESSION.rol==='socio'&&a.socio===SESSION.socio);
+    const btnDesasig=canLiberate
+      ?`<button class="btn sm ghost" style="color:var(--red)" onclick="confirmarLiberarEquipo('${a.equipoId}')">Desasignar</button>`
+      :'—';
+    return`<tr>
+      <td style="font-family:var(--mono);font-weight:700;font-size:12px">${a.equipoId}</td>
+      <td style="font-family:var(--mono);font-size:11px">${eq?eq.serie:''}</td>
+      <td>${claseChip}</td>
+      <td>${a.verificadorNombre}</td>
+      <td><span class="chip ${scls(a.socio)}">${a.socio}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${a.fecha||'—'}</td>
+      <td>${epDiasLabel(a.dias)}</td>
+      <td>${btnDesasig}</td>
+    </tr>`;
+  }).join('');
 }
 
 /* ── ASIGNAR POR RANGO (múltiples rangos) ── */
