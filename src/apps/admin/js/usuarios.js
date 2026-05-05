@@ -2715,7 +2715,7 @@ function abrirTransVerificador(idVer, modo){
   updTransInventario();
 }
 
-function guardarVerificador(){
+async function guardarVerificador(){
   const id=document.getElementById('mv-id').value;
   const nombre=document.getElementById('mv-nombre').value.trim();
   const socio=document.getElementById('mv-socio').value;
@@ -2724,11 +2724,26 @@ function guardarVerificador(){
   const zona=document.getElementById('mv-zona').value.trim();
   const tipoUsuario=document.getElementById('mv-tipo-usuario').value||'verificador';
   if(!nombre||!socio){alert('Nombre y socio son requeridos.');return;}
-  if(id){
-    const v=verificadores.find(v=>v.id===id);
-    if(v){Object.assign(v,{nombre,socio,tel,email,zona,tipoUsuario});}
-  } else {
-    verificadores.push({id:nextIdVer(),socio,nombre,tel,email,zona,activo:true,tipoUsuario,asignaciones:[]});
+  const payload={nombre,socio,tel,email,zona,tipoUsuario};
+  try {
+    if(id){
+      await api.put('/api/verificadores/'+id, payload);
+      const v=verificadores.find(v=>v.id===id);
+      if(v){Object.assign(v,payload);}
+    } else {
+      const res=await api.post('/api/verificadores', payload);
+      const newId = res && res.id ? res.id : nextIdVer();
+      verificadores.push({id:newId,socio,nombre,tel,email,zona,activo:true,tipoUsuario,asignaciones:[]});
+    }
+  } catch(e){
+    console.warn('guardarVerificador API error:', e);
+    // Fallback: actualizar solo en memoria si la API falla
+    if(id){
+      const v=verificadores.find(v=>v.id===id);
+      if(v){Object.assign(v,payload);}
+    } else {
+      verificadores.push({id:nextIdVer(),socio,nombre,tel,email,zona,activo:true,tipoUsuario,asignaciones:[]});
+    }
   }
   closeModal('modal-verificador');
   renderVerificadores();
@@ -3166,6 +3181,43 @@ document.getElementById('login-user').focus();
 ══════════════════════════════════════════════ */
 let _registrosVerif = []; // todos los registros de todos los verificadores
 
+/** Retorna registros de muestra para mostrar cuando no hay datos reales */
+function demoRegistrosVerif(){
+  const hoy = new Date().toISOString().slice(0,10);
+  return [
+    { id:'R1', razonSocial:'Mercado La Merced', giro:'Comercio', fechaSol:hoy,
+      calle:'Rosario 182, Col. Merced Balbuena', municipio:'Venustiano Carranza',
+      entidad:'Ciudad de México', cp:'15810', utm:'', observaciones:'',
+      folioDict:'00101', fechaDict:hoy,
+      instrumentos:[
+        { no:1,tipo:'E',marca:'OHAUS',modelo:'Defender 3000',serie:'B234556',max:'300',e:'100',
+          clasExact:'III',prototipo:'',dgn:'',periodo:'S',ipe:'P',
+          inspecVisual:'C',exactitud:'C',repetibilidad:'C',excentricidad:'NC',cumpleNom:'NC',
+          holoTipo:'S1',holoProfeco:'S10000100',holoU:'UVA26001' }
+      ],
+      equipoPatron:{m:'MP-01',c:'',d:'',v:'VI-2024'},
+      pago:{sub:'850.00',iva:'136.00',total:'986.00'},
+      imparcialidad:'ninguna',apoyo:'',
+      verificador:'Carlos Ramírez',socio:'Socio A',zona:'Zona Norte',
+      status:'demo', createdAt:new Date(Date.now()-3600000).toISOString() },
+    { id:'R2', razonSocial:'Báscula Industrial Nápoles S.A. de C.V.', giro:'Industria', fechaSol:hoy,
+      calle:'Insurgentes Sur 543, Col. Nápoles', municipio:'Benito Juárez',
+      entidad:'Ciudad de México', cp:'03810', utm:'', observaciones:'Equipo con desgaste en plataforma',
+      folioDict:'00102', fechaDict:hoy,
+      instrumentos:[
+        { no:1,tipo:'M',marca:'FAIRBANKS',modelo:'FM-200',serie:'FM20019001',max:'2000',e:'500',
+          clasExact:'IIII',prototipo:'',dgn:'',periodo:'A',ipe:'P',
+          inspecVisual:'C',exactitud:'C',repetibilidad:'C',excentricidad:'C',cumpleNom:'C',
+          holoTipo:'S2',holoProfeco:'S20000050',holoU:'UVA26002' }
+      ],
+      equipoPatron:{m:'MP-01',c:'C-007',d:'',v:'VI-2024'},
+      pago:{sub:'1200.00',iva:'192.00',total:'1392.00'},
+      imparcialidad:'ninguna',apoyo:'',
+      verificador:'Laura Mendoza',socio:'Socio B',zona:'Zona Sur',
+      status:'demo', createdAt:new Date(Date.now()-7200000).toISOString() },
+  ];
+}
+
 /** Carga todos los registros de los verificadores desde la API (con fallback a localStorage) */
 async function cargarRegistrosVerif(){
   try {
@@ -3184,6 +3236,10 @@ async function cargarRegistrosVerif(){
         const arr = JSON.parse(localStorage.getItem(key));
         if(Array.isArray(arr)) _registrosVerif = _registrosVerif.concat(arr);
       } catch(e2){ /* registro corrupto, ignorar */ }
+    }
+    // Si localStorage también está vacío, usar demo
+    if (_registrosVerif.length === 0) {
+      _registrosVerif = demoRegistrosVerif();
     }
     _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
     _poblarFiltroVerificadorRV();
@@ -3241,7 +3297,12 @@ async function renderRegistrosVerif(){
     return;
   }
 
-  tbody.innerHTML = filtrados.map(r=>{
+  const esDemo = filtrados.length > 0 && filtrados.every(r => r.status === 'demo');
+  const demoBanner = esDemo
+    ? `<tr><td colspan="10" style="text-align:center;background:var(--yellow-bg,#fef9ec);color:var(--yellow-text,#92700a);font-size:11px;padding:6px 12px;border-bottom:1px solid var(--border)">⚠ Datos de muestra — sincroniza la app verificador para ver registros reales</td></tr>`
+    : '';
+
+  tbody.innerHTML = demoBanner + filtrados.map(r=>{
     const res = _resultadoGlobalRV(r);
     const resChip = res==='C'
       ? `<span class="chip completo" style="font-size:9px">Cumple</span>`
