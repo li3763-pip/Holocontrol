@@ -3070,7 +3070,7 @@ function cargarRegistrosVerif(){
     } catch(e){ /* registro corrupto, ignorar */ }
   }
   // Ordenar por fecha de creación descendente
-  _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
+  _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? -1 : 1));
   _poblarFiltroVerificadorRV();
 }
 
