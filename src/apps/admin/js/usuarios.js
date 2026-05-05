@@ -2319,7 +2319,6 @@ async function doLogin(){
   const pass=document.getElementById('login-pass').value;
   const err=document.getElementById('login-err');
   err.style.display='none';
-  err.textContent='Usuario o contraseña incorrectos.';
 
   try {
     const res = await api.login(user, pass);
@@ -2336,7 +2335,7 @@ async function doLogin(){
   } catch(e) {
     // Fallback offline: buscar en array local
     const u=usuarios.find(u=>u.user===user&&u.pass===pass);
-    if(!u){err.style.display='block';document.getElementById('login-pass').value='';return;}
+    if(!u){err.style.display='block';err.textContent='Usuario o contraseña incorrectos.';document.getElementById('login-pass').value='';return;}
     if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso mediante la app móvil.';document.getElementById('login-pass').value='';return;}
     SESSION={user:u.user,id:null,nombre:u.nombre,rol:u.rol,socio:u.socio};
     syncVerificadoresALocalStorage();

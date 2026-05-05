@@ -303,7 +303,7 @@ export default {
         const err = requireAuth(session); if (err) return err;
         return handlePostRegistro(request, session, DB);
       }
-      const mReg = path.match(/^\/api\/registros\/(\d+)$/) ;
+      const mReg = path.match(/^\/api\/registros\/(\d+)$/);
       if (mReg && method === 'PUT') {
         const err = requireAuth(session); if (err) return err;
         return handlePutRegistro(request, parseInt(mReg[1]), session, DB);
