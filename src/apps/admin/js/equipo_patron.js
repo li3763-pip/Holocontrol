@@ -52,7 +52,7 @@
 /* dias: array de strings, e.g. ['lun','mie','vie'] — vacío = todos los días */
 let asignacionesEquipo=[];
 
-/* Clave de localStorage compartida con la app del verificador */
+/* Clave de localStorage compartida con la app del verificador (fallback offline) */
 const EP_LS_KEY='hc_asignaciones_equipo';
 
 function epSaveToStorage(){
@@ -64,6 +64,30 @@ function epLoadFromStorage(){
     const raw=localStorage.getItem(EP_LS_KEY);
     if(raw) asignacionesEquipo=JSON.parse(raw);
   }catch(e){}
+}
+
+/* Guarda en API (con fallback a localStorage) */
+async function epSave(){
+  epSaveToStorage();
+}
+
+/* Elimina asignación de equipo en API */
+async function epDeleteRemote(equipoId){
+  try { await api.del('/api/equipos/'+encodeURIComponent(equipoId)); } catch(e) { console.warn('epDeleteRemote:', e.message); }
+}
+
+/* Agrega asignación de equipo en API */
+async function epPostRemote(asig){
+  try {
+    await api.post('/api/equipos', {
+      equipoId: asig.equipoId,
+      verificadorId: asig.verificadorId,
+      verificadorNombre: asig.verificadorNombre,
+      socio: asig.socio,
+      fecha: asig.fecha,
+      dias: asig.dias
+    });
+  } catch(e) { console.warn('epPostRemote:', e.message); }
 }
 
 epLoadFromStorage();
@@ -220,7 +244,9 @@ function guardarAsigEquipo(){
 
   const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epa-dia-'+d);return cb&&cb.checked;});
 
-  asignacionesEquipo.push({equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
+  const nuevaAsig={equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias};
+  asignacionesEquipo.push(nuevaAsig);
+  await epPostRemote(nuevaAsig);
   epSaveToStorage();
   closeModal('modal-equipo-patron-asig');
   renderEquipoPatron();
@@ -238,8 +264,9 @@ function confirmarLiberarEquipo(equipoId){
   liberarEquipo(equipoId);
 }
 
-function liberarEquipo(equipoId){
+async function liberarEquipo(equipoId){
   asignacionesEquipo=asignacionesEquipo.filter(a=>a.equipoId!==equipoId);
+  await epDeleteRemote(equipoId);
   epSaveToStorage();
   renderEquipoPatron();
 }
@@ -429,14 +456,19 @@ function guardarAsigRangoEquipo(){
   const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epra-dia-'+d);return cb&&cb.checked;});
   let asignados=0;
   const seen=new Set();
+  const nuevas=[];
   allItems.forEach(e=>{
     if(!seen.has(e.id)&&equipoLibre(e.id)){
       seen.add(e.id);
-      asignacionesEquipo.push({equipoId:e.id,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
+      const a={equipoId:e.id,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias};
+      asignacionesEquipo.push(a);
+      nuevas.push(a);
       asignados++;
     }
   });
   closeModal('modal-equipo-patron-rango');
+  // Persistir en API y localStorage
+  Promise.all(nuevas.map(a=>epPostRemote(a))).catch(()=>{});
   epSaveToStorage();
   renderEquipoPatron();
   if(asignados>0) alert(`${asignados} equipo(s) asignados correctamente a ${ver.nombre}.`);
