@@ -2388,6 +2388,12 @@ async function loadDataFromAPI(){
       const u = provData.proveedorUVA;
       proveedorUVA = { nombre: u.nombre, contacto: u.contacto, tel: u.tel, precio: u.precio, fechaPrecio: u.fecha_precio };
     }
+    // Cargar registros de verificación
+    api.get('/api/registros').then(data => {
+      _registrosVerif = data.map(r => r.datos || r);
+      _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
+      _poblarFiltroVerificadorRV();
+    }).catch(e => console.warn('No se pudieron cargar registros de verif:', e.message));
     FOLIOS_REG = new Set();
     recepciones.forEach(r => {
       if(r.asignacion) {
@@ -3160,20 +3166,28 @@ document.getElementById('login-user').focus();
 ══════════════════════════════════════════════ */
 let _registrosVerif = []; // todos los registros de todos los verificadores
 
-/** Carga todos los registros de los verificadores desde localStorage */
-function cargarRegistrosVerif(){
-  _registrosVerif = [];
-  for(let i=0; i<localStorage.length; i++){
-    const key = localStorage.key(i);
-    if(!key || !key.startsWith('reg_')) continue;
-    try {
-      const arr = JSON.parse(localStorage.getItem(key));
-      if(Array.isArray(arr)) _registrosVerif = _registrosVerif.concat(arr);
-    } catch(e){ /* registro corrupto, ignorar */ }
+/** Carga todos los registros de los verificadores desde la API (con fallback a localStorage) */
+async function cargarRegistrosVerif(){
+  try {
+    const data = await api.get('/api/registros');
+    _registrosVerif = data.map(r => r.datos || r);
+    _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
+    _poblarFiltroVerificadorRV();
+  } catch(e) {
+    console.warn('cargarRegistrosVerif API falló, usando localStorage:', e.message);
+    // Fallback: leer localStorage (comportamiento anterior)
+    _registrosVerif = [];
+    for(let i=0; i<localStorage.length; i++){
+      const key = localStorage.key(i);
+      if(!key || !key.startsWith('reg_')) continue;
+      try {
+        const arr = JSON.parse(localStorage.getItem(key));
+        if(Array.isArray(arr)) _registrosVerif = _registrosVerif.concat(arr);
+      } catch(e2){ /* registro corrupto, ignorar */ }
+    }
+    _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
+    _poblarFiltroVerificadorRV();
   }
-  // Ordenar por fecha de creación descendente
-  _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? -1 : 1));
-  _poblarFiltroVerificadorRV();
 }
 
 /** Llena el select de verificadores con los nombres únicos encontrados */
@@ -3193,8 +3207,8 @@ function _resultadoGlobalRV(r){
 }
 
 /** Renderiza la tabla de registros de verificaciones */
-function renderRegistrosVerif(){
-  cargarRegistrosVerif(); // refresca por si hay datos nuevos
+async function renderRegistrosVerif(){
+  await cargarRegistrosVerif(); // refresca por si hay datos nuevos
 
   const text = (document.getElementById('filtRV-text')?.value||'').toLowerCase();
   const filtVerif = document.getElementById('filtRV-verificador')?.value||'';
