@@ -1071,6 +1071,7 @@ function go(id){
     renderVerificadores();
   }
   if(id==='equipo-patron') renderEquipoPatron();
+  if(id==='registros-verif') renderRegistrosVerif();
   if(window.innerWidth<=700)closeSidebar();
 }
 
@@ -3049,3 +3050,169 @@ function _pinVerify(){
 }
 // Arrancar con login
 document.getElementById('login-user').focus();
+
+/* ══════════════════════════════════════════════
+   MÓDULO: REGISTRO DE VERIFICACIONES
+   Lee los registros guardados por la app Verificador
+   en localStorage (claves reg_<username>).
+══════════════════════════════════════════════ */
+let _registrosVerif = []; // todos los registros de todos los verificadores
+
+/** Carga todos los registros de los verificadores desde localStorage */
+function cargarRegistrosVerif(){
+  _registrosVerif = [];
+  for(let i=0; i<localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(!key || !key.startsWith('reg_')) continue;
+    try {
+      const arr = JSON.parse(localStorage.getItem(key));
+      if(Array.isArray(arr)) _registrosVerif = _registrosVerif.concat(arr);
+    } catch(e){ /* registro corrupto, ignorar */ }
+  }
+  // Ordenar por fecha de creación descendente
+  _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? -1 : 1));
+  _poblarFiltroVerificadorRV();
+}
+
+/** Llena el select de verificadores con los nombres únicos encontrados */
+function _poblarFiltroVerificadorRV(){
+  const sel = document.getElementById('filtRV-verificador');
+  if(!sel) return;
+  const nombres = [...new Set(_registrosVerif.map(r=>r.verificador).filter(Boolean))].sort();
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Todos los verificadores</option>' +
+    nombres.map(n=>`<option value="${n}"${n===prev?' selected':''}>${n}</option>`).join('');
+}
+
+/** Calcula el resultado global de un registro (C si todos cumplen, NC si alguno no cumple) */
+function _resultadoGlobalRV(r){
+  if(!r.instrumentos || !r.instrumentos.length) return '—';
+  return r.instrumentos.some(i=>i.cumpleNom==='NC') ? 'NC' : 'C';
+}
+
+/** Renderiza la tabla de registros de verificaciones */
+function renderRegistrosVerif(){
+  cargarRegistrosVerif(); // refresca por si hay datos nuevos
+
+  const text = (document.getElementById('filtRV-text')?.value||'').toLowerCase();
+  const filtVerif = document.getElementById('filtRV-verificador')?.value||'';
+  const filtSocio = document.getElementById('filtRV-socio')?.value||'';
+  const filtRes = document.getElementById('filtRV-resultado')?.value||'';
+
+  const filtrados = _registrosVerif.filter(r=>{
+    if(filtVerif && r.verificador !== filtVerif) return false;
+    if(filtSocio && r.socio !== filtSocio) return false;
+    if(filtRes && _resultadoGlobalRV(r) !== filtRes) return false;
+    if(text){
+      const haystack = ((r.razonSocial||'')+(r.folioDict||'')+(r.verificador||'')+(r.giro||'')).toLowerCase();
+      if(!haystack.includes(text)) return false;
+    }
+    return true;
+  });
+
+  // Métricas
+  const cumple = filtrados.filter(r=>_resultadoGlobalRV(r)==='C').length;
+  const nc = filtrados.filter(r=>_resultadoGlobalRV(r)==='NC').length;
+  const instr = filtrados.reduce((s,r)=>s+(r.instrumentos?.length||0),0);
+  document.getElementById('rv-met-total').textContent = filtrados.length;
+  document.getElementById('rv-met-cumple').textContent = cumple;
+  document.getElementById('rv-met-nc').textContent = nc;
+  document.getElementById('rv-met-instr').textContent = instr;
+
+  const tbody = document.getElementById('tbody-registros-verif');
+  if(!filtrados.length){
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:24px;font-size:13px">Sin registros. Los dictámenes capturados desde la app verificador aparecerán aquí.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtrados.map(r=>{
+    const res = _resultadoGlobalRV(r);
+    const resChip = res==='C'
+      ? `<span class="chip completo" style="font-size:9px">Cumple</span>`
+      : res==='NC'
+        ? `<span class="chip" style="font-size:9px;background:var(--red-bg);color:var(--red)">No cumple</span>`
+        : `<span style="color:var(--text3);font-size:11px">—</span>`;
+    const socioChip = r.socio ? `<span class="chip ${scls(r.socio)}" style="font-size:9px">${r.socio}</span>` : '—';
+    return `<tr style="cursor:pointer" onclick="openDetalleReg('${r.id}')">
+      <td style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--blue)">${r.folioDict||'—'}</td>
+      <td style="font-size:11px">${r.fechaDict||'—'}</td>
+      <td style="font-size:11px">${r.fechaSol||'—'}</td>
+      <td style="font-size:12px;font-weight:500">${r.razonSocial||'—'}</td>
+      <td style="font-size:11px">${r.verificador||'—'}</td>
+      <td>${socioChip}</td>
+      <td style="font-size:11px;color:var(--text2)">${r.zona||'—'}</td>
+      <td style="text-align:center;font-size:12px;font-weight:600">${r.instrumentos?.length||0}</td>
+      <td style="text-align:center">${resChip}</td>
+      <td style="text-align:center"><button class="btn sm ghost" onclick="event.stopPropagation();openDetalleReg('${r.id}')">&#x1F50D;</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/** Abre el modal de detalle de un registro */
+function openDetalleReg(id){
+  const r = _registrosVerif.find(x=>x.id===id);
+  if(!r){ alert('Registro no encontrado'); return; }
+
+  const res = _resultadoGlobalRV(r);
+  const resColor = res==='C'?'var(--green)':res==='NC'?'var(--red)':'var(--text3)';
+  const resLabel = res==='C'?'C – Cumple NOM-010':res==='NC'?'NC – No Cumple':'—';
+
+  let instrHTML = '';
+  (r.instrumentos||[]).forEach((inst,i)=>{
+    const tipoLabel = inst.tipo==='M'?'Mecánico':inst.tipo==='E'?'Electrónico':inst.tipo==='H'?'Híbrido':(inst.tipo||'—');
+    const row = (lbl,val,extra='')=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px${extra}"><span style="color:var(--text3)">${lbl}</span><span>${val}</span></div>`;
+    instrHTML += `<div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">Instrumento ${inst.no||i+1} · ${tipoLabel}</div>
+      ${row('Marca / Modelo',`${inst.marca||'—'} ${inst.modelo||''}`)}
+      ${row('N° Serie',`<span style="font-family:var(--mono)">${inst.serie||'—'}</span>`)}
+      ${row('Máx / e(g)',`${inst.max||'—'} kg / ${inst.e||'—'} g`)}
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
+        ${['inspecVisual:Insp. Visual','exactitud:Exactitud','repetibilidad:Repetibilidad','excentricidad:Excentricidad'].map(p=>{
+          const [k,l]=p.split(':'); const v=inst[k]||'—';
+          const c=v==='C'?'color:var(--green)':v==='NC'?'color:var(--red)':v==='NA'?'color:var(--amber)':'';
+          return `<div style="background:var(--surface);border-radius:5px;padding:5px 8px"><div style="color:var(--text3);margin-bottom:2px">${l}</div><div style="font-weight:700;${c}">${v}</div></div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-weight:700">
+        <span style="color:var(--text3)">Cumple NOM-010</span>
+        <span style="color:${inst.cumpleNom==='C'?'var(--green)':inst.cumpleNom==='NC'?'var(--red)':'var(--amber)'}">${inst.cumpleNom||'—'}</span>
+      </div>
+      ${inst.holoProfeco?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-top:1px solid var(--border)"><span style="color:var(--text3)">Holograma</span><span style="font-family:var(--mono)">${inst.holoTipo||''} · PROFECO: ${inst.holoProfeco||'—'}${inst.holoU?' · UVA: '+inst.holoU:''}</span></div>`:''}
+    </div>`;
+  });
+
+  const pagoTotal = r.pago?.total ? '$'+parseFloat(r.pago.total).toLocaleString('es-MX',{minimumFractionDigits:2}) : '—';
+
+  const row = (lbl,val,extra='')=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px${extra}"><span style="color:var(--text3)">${lbl}</span><span>${val}</span></div>`;
+  document.getElementById('modal-rv-body').innerHTML = `
+    <div class="card" style="margin-bottom:10px;padding:12px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Folio de dictamen</div>
+          <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--blue)">Nº ${r.folioDict||'—'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;font-weight:700;color:${resColor}">${resLabel}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${new Date(r.createdAt||'').toLocaleString('es-MX',{timeZone:'America/Mexico_City'})}</div>
+        </div>
+      </div>
+      ${row('Razón social',`<strong>${r.razonSocial||'—'}</strong>`)}
+      ${row('Giro',r.giro||'—')}
+      ${row('Fecha solicitud',r.fechaSol||'—')}
+      ${row('Fecha dictamen',r.fechaDict||'—')}
+      ${row('Domicilio',`<span style="font-size:11px">${[r.calle,r.municipio,r.entidad,r.cp].filter(Boolean).join(', ')||'—'}</span>`)}
+      ${row('Verificador',r.verificador||'—')}
+      ${row('Socio / Zona',`${r.socio||'—'} · ${r.zona||'—'}`)}
+      ${row('Imparcialidad',`<span style="font-size:11px">${r.imparcialidad||'—'}</span>`)}
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span style="color:var(--text3)">Pago total</span><strong style="color:var(--blue)">${pagoTotal}</strong></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Instrumentos (${(r.instrumentos||[]).length})</div>
+    ${instrHTML||'<div style="color:var(--text3);font-size:12px;padding:8px 0">Sin instrumentos registrados</div>'}
+  `;
+
+  document.getElementById('modal-reg-verif').style.display='flex';
+}
+
+titles['registros-verif']='Registro de verificaciones';
+breadcrumbs['registros-verif']='Verificaciones';
