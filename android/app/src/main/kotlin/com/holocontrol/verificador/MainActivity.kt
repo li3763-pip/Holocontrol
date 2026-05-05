@@ -232,8 +232,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        // Carga desde el Worker — mismo backend que el panel admin
-        private const val APP_URL = "https://holocontrol.li3763.workers.dev/src/apps/verificador/index.html"
+        // UI local desde assets (src/ mapeado en build.gradle.kts).
+        // Las llamadas API van al Worker vía api.js con BASE_URL absoluta.
+        private const val APP_URL = "file:///android_asset/apps/verificador/index.html"
         private const val REQUEST_LOCATION = 1001
     }
 }
