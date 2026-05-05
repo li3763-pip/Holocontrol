@@ -2314,17 +2314,37 @@ function puedeEditarSocio(socio){
 }
 
 /* ── LOGIN / LOGOUT ── */
-function doLogin(){
+async function doLogin(){
   const user=document.getElementById('login-user').value.trim();
   const pass=document.getElementById('login-pass').value;
-  const u=usuarios.find(u=>u.user===user&&u.pass===pass);
   const err=document.getElementById('login-err');
-  if(!u){err.style.display='block';document.getElementById('login-pass').value='';return;}
-  if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso mediante la app móvil.';document.getElementById('login-pass').value='';return;}
-  if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso a la app móvil.';document.getElementById('login-pass').value='';return;}
   err.style.display='none';
-  SESSION={user:u.user,nombre:u.nombre,rol:u.rol,socio:u.socio};
-  syncVerificadoresALocalStorage();
+  err.textContent='Usuario o contraseña incorrectos.';
+
+  try {
+    const res = await api.login(user, pass);
+    const u = res.user;
+    if(u.rol==='verificador'){
+      err.style.display='block';
+      err.textContent='Los verificadores solo tienen acceso mediante la app móvil.';
+      document.getElementById('login-pass').value='';
+      return;
+    }
+    SESSION={user:u.user,id:u.id,nombre:u.nombre,rol:u.rol,socio:u.socio};
+    await loadDataFromAPI();
+    _afterLogin(u);
+  } catch(e) {
+    // Fallback offline: buscar en array local
+    const u=usuarios.find(u=>u.user===user&&u.pass===pass);
+    if(!u){err.style.display='block';document.getElementById('login-pass').value='';return;}
+    if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso mediante la app móvil.';document.getElementById('login-pass').value='';return;}
+    SESSION={user:u.user,id:null,nombre:u.nombre,rol:u.rol,socio:u.socio};
+    syncVerificadoresALocalStorage();
+    _afterLogin(u);
+  }
+}
+
+function _afterLogin(u){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('session-username').textContent=u.nombre;
   const badge=document.getElementById('session-role-badge');
@@ -2338,10 +2358,55 @@ function doLogin(){
 }
 
 function doLogout(){
-  SESSION={user:null,nombre:'',rol:'',socio:''};
+  api.logout();
+  SESSION={user:null,id:null,nombre:'',rol:'',socio:''};
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
+}
+
+/* Carga datos desde la API D1 y actualiza los arrays en memoria */
+async function loadDataFromAPI(){
+  try {
+    const [comprasData, recData, verifData, eqData, provData] = await Promise.all([
+      api.get('/api/compras'),
+      api.get('/api/recepciones'),
+      api.get('/api/verificadores'),
+      api.get('/api/equipos'),
+      api.get('/api/proveedores'),
+    ]);
+    compras = comprasData;
+    recepciones = recData.map(r => ({ ...r, porTipo: r.porTipo || {} }));
+    verificadores = verifData;
+    asignacionesEquipo = eqData.map(e => ({ ...e, dias: e.dias || [] }));
+    if(provData.proveedores) {
+      proveedores = provData.proveedores.map(p => ({
+        nombre: p.nombre, contacto: p.contacto, tel: p.tel,
+        precio: p.precio, fechaPrecio: p.fecha_precio
+      }));
+    }
+    if(provData.proveedorUVA) {
+      const u = provData.proveedorUVA;
+      proveedorUVA = { nombre: u.nombre, contacto: u.contacto, tel: u.tel, precio: u.precio, fechaPrecio: u.fecha_precio };
+    }
+    FOLIOS_REG = new Set();
+    recepciones.forEach(r => {
+      if(r.asignacion) {
+        Object.values(r.asignacion).forEach(tipos => {
+          Object.values(tipos).forEach(rangos => {
+            if(Array.isArray(rangos)) {
+              rangos.forEach(rng => {
+                const ini = parseInt(rng.ini), fin = parseInt(rng.fin);
+                if(!isNaN(ini) && !isNaN(fin)) for(let n=ini;n<=fin;n++) FOLIOS_REG.add(String(n).padStart(8,'0'));
+              });
+            }
+          });
+        });
+      }
+    });
+  } catch(e) {
+    console.warn('loadDataFromAPI falló, usando datos locales:', e.message);
+  }
 }
 
 /* ── APLICAR PERMISOS UI ── */
@@ -2413,14 +2478,19 @@ function editarUsuario(i){
   openModal('modal-usuario');
 }
 
-function eliminarUsuario(i){
+async function eliminarUsuario(i){
   if(usuarios[i].user===SESSION.user){alert('No puedes eliminar tu propio usuario.');return;}
   if(!confirm(`¿Eliminar usuario "${usuarios[i].nombre}"?`))return;
-  usuarios.splice(i,1);
-  renderUsuarios();
+  try {
+    if(SESSION.id && usuarios[i].id) await api.del('/api/usuarios/'+usuarios[i].id);
+    usuarios.splice(i,1);
+    renderUsuarios();
+  } catch(e) {
+    alert('Error al eliminar: '+e.message);
+  }
 }
 
-function guardarUsuario(){
+async function guardarUsuario(){
   const idx=document.getElementById('u-edit-idx').value;
   const nombre=document.getElementById('u-nombre').value.trim();
   const user=document.getElementById('u-user').value.trim();
@@ -2437,16 +2507,32 @@ function guardarUsuario(){
   if(pass&&pass.length<6){alert('La contraseña debe tener al menos 6 caracteres.');return;}
   if(pass&&pass!==pass2){alert('Las contraseñas no coinciden.');return;}
 
-  // Verificar usuario duplicado
   const dupIdx=usuarios.findIndex(u=>u.user===user);
   if(dupIdx!==-1&&(!esEdicion||dupIdx!==parseInt(idx))){alert('Ese nombre de usuario ya existe.');return;}
 
+  const body={nombre,user,rol,socio:(rol==='socio'||rol==='verificador')?socio:''};
+  if(pass) body.pass=pass;
+
+  try {
+    if(SESSION.id) {
+      if(esEdicion && usuarios[parseInt(idx)].id){
+        await api.put('/api/usuarios/'+usuarios[parseInt(idx)].id, body);
+      } else if(!esEdicion) {
+        const res = await api.post('/api/usuarios', body);
+        body.id = res.id;
+      }
+    }
+  } catch(e) {
+    if(e.status===409){alert('Ese nombre de usuario ya existe en el servidor.');return;}
+    console.warn('guardarUsuario API error:', e.message);
+  }
+
   if(esEdicion){
     const u=usuarios[parseInt(idx)];
-    u.nombre=nombre;u.user=user;u.rol=rol;u.socio=(rol==='socio'||rol==='verificador')?socio:'';
+    Object.assign(u,{nombre,user,rol,socio:body.socio});
     if(pass) u.pass=pass;
   } else {
-    usuarios.push({nombre,user,pass,rol,socio:(rol==='socio'||rol==='verificador')?socio:''});
+    usuarios.push({nombre,user,pass,rol,socio:body.socio,...(body.id?{id:body.id}:{})});
   }
   closeModal('modal-usuario');
   renderUsuarios();

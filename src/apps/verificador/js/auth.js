@@ -18,19 +18,6 @@ const USUARIOS = [
     equipoPatron:{ m:'M03', c:'C02', d:'', v:'V200' } },
 ];
 
-/* Devuelve la lista de usuarios activos: primero intenta desde localStorage
-   (sincronizado por el panel admin), cae al array USUARIOS hardcodeado como fallback. */
-function getUsuariosActivos(){
-  try {
-    const raw = localStorage.getItem('hc_usuarios_verificador');
-    if(raw){
-      const fromAdmin = JSON.parse(raw);
-      if(Array.isArray(fromAdmin) && fromAdmin.length > 0) return fromAdmin;
-    }
-  } catch(e){}
-  return USUARIOS;
-}
-
 /* Normaliza un objeto equipoPatron {m,c,d,v} de valores únicos a arrays por tipo. */
 function normalizarEquiposAsignados(ep){
   const out={m:[],c:[],d:[],v:[]};
@@ -41,53 +28,137 @@ function normalizarEquiposAsignados(ep){
   return out;
 }
 
-/* Construye la lista completa de equipos patrón asignados al verificador desde el
-   localStorage escrito por el panel admin (equipo_patron.js).
-   Retorna { m:[…], c:[…], d:[…], v:[…] } con TODOS los equipos asignados por tipo.
-   Si no hay datos en localStorage usa fallbackSingle (objeto {m,c,d,v} de valores únicos). */
-function buildEquiposAsignadosFromStorage(nombre, fallbackSingle){
-  try {
-    const raw = localStorage.getItem('hc_asignaciones_equipo');
-    if(!raw) return normalizarEquiposAsignados(fallbackSingle);
-    const asigs = JSON.parse(raw);
+/* Construye la lista completa de equipos patrón asignados al verificador.
+   Primero intenta la API (asignaciones cargadas tras login),
+   si no, usa localStorage escrito por equipo_patron.js del panel admin,
+   y como último recurso usa fallbackSingle hardcodeado. */
+function buildEquiposAsignadosFromStorage(nombre, fallbackSingle, apiAsignaciones){
+  // Prioridad 1: datos recién cargados de la API
+  if(apiAsignaciones && apiAsignaciones.length > 0){
     const ep = {m:[],c:[],d:[],v:[]};
-    let found = false;
-    asigs.filter(a=>a.verificadorNombre===nombre).forEach(a=>{
-      const seriesMatch = a.equipoId.match(/^([A-Za-z]+)\d/);
+    apiAsignaciones.filter(a=>a.verificador_nombre===nombre).forEach(a=>{
+      const seriesMatch = a.equipo_id.match(/^([A-Za-z]+)\d/);
       if(!seriesMatch) return;
       const serie = seriesMatch[1].toUpperCase();
       const key = serie==='M'||serie==='MF' ? 'm'
                 : serie==='C'||serie==='CF' ? 'c'
                 : serie==='D'||serie==='DF' ? 'd'
                 : serie==='V'||serie==='VF' ? 'v' : null;
-      if(key && !ep[key].includes(a.equipoId)){ ep[key].push(a.equipoId); found=true; }
+      if(key && !ep[key].includes(a.equipo_id)) ep[key].push(a.equipo_id);
     });
-    return found ? ep : normalizarEquiposAsignados(fallbackSingle);
-  } catch(e){ return normalizarEquiposAsignados(fallbackSingle); }
+    const hasAny = Object.values(ep).some(arr=>arr.length>0);
+    if(hasAny) return ep;
+  }
+  // Prioridad 2: localStorage (sincronizado por equipo_patron.js)
+  try {
+    const raw = localStorage.getItem('hc_asignaciones_equipo');
+    if(raw){
+      const asigs = JSON.parse(raw);
+      const ep = {m:[],c:[],d:[],v:[]};
+      let found = false;
+      asigs.filter(a=>a.verificadorNombre===nombre).forEach(a=>{
+        const seriesMatch = a.equipoId.match(/^([A-Za-z]+)\d/);
+        if(!seriesMatch) return;
+        const serie = seriesMatch[1].toUpperCase();
+        const key = serie==='M'||serie==='MF' ? 'm'
+                  : serie==='C'||serie==='CF' ? 'c'
+                  : serie==='D'||serie==='DF' ? 'd'
+                  : serie==='V'||serie==='VF' ? 'v' : null;
+        if(key && !ep[key].includes(a.equipoId)){ ep[key].push(a.equipoId); found=true; }
+      });
+      if(found) return ep;
+    }
+  } catch(e){}
+  // Prioridad 3: fallback hardcodeado
+  return normalizarEquiposAsignados(fallbackSingle);
 }
 
-function doLogin(){
+async function doLogin(){
   const u = document.getElementById('l-user').value.trim().toLowerCase();
   const p = document.getElementById('l-pass').value;
-  const f = getUsuariosActivos().find(v=>v.user===u && v.pass===p);
-  if(!f){ document.getElementById('l-err').style.display='block'; document.getElementById('l-pass').value=''; return; }
-  document.getElementById('l-err').style.display='none';
-  SESSION = JSON.parse(JSON.stringify(f)); // copia profunda para mutar inventario sin afectar USUARIOS
-  // Obtener todos los equipos patrón asignados (panel admin) o normalizar los predeterminados
-  SESSION.equiposAsignados = buildEquiposAsignadosFromStorage(SESSION.nombre, SESSION.equipoPatron||{m:'',c:'',d:'',v:''});
-  // Mantener equipoPatron (primer equipo de cada tipo) para compatibilidad con la vista de detalle
-  SESSION.equipoPatron = {
-    m: SESSION.equiposAsignados.m[0]||'',
-    c: SESSION.equiposAsignados.c[0]||'',
-    d: SESSION.equiposAsignados.d[0]||'',
-    v: SESSION.equiposAsignados.v[0]||'',
-  };
-  const saved = localStorage.getItem('reg_'+u);
-  registros = saved ? JSON.parse(saved) : demoDicts();
-  initApp();
+  const errEl = document.getElementById('l-err');
+  errEl.style.display='none';
+
+  // Intentar autenticación contra el backend D1
+  try {
+    const res = await api.login(u, p);
+    const apiUser = res.user;
+    if(apiUser.rol !== 'verificador'){
+      errEl.style.display='block';
+      errEl.textContent='Este usuario no tiene acceso como verificador.';
+      document.getElementById('l-pass').value='';
+      return;
+    }
+    // Buscar datos adicionales del verificador
+    let asignaciones = [];
+    try {
+      const verifList = await api.get('/api/verificadores');
+      const verObj = verifList.find(v => v.nombre === apiUser.nombre);
+      if(verObj) asignaciones = verObj.asignaciones || [];
+    } catch(e){}
+
+    // Cargar registros desde API
+    let regsApi = [];
+    try {
+      const regsData = await api.get('/api/registros/' + apiUser.id);
+      regsApi = regsData;
+    } catch(e){}
+
+    // Buscar usuario local como base de datos de inventario (puede diferir)
+    const localUser = USUARIOS.find(v=>v.user===u) || {};
+
+    SESSION = {
+      ...localUser,
+      user: apiUser.user,
+      id: apiUser.id,
+      nombre: apiUser.nombre,
+      socio: apiUser.socio,
+      pass: undefined,
+      inv: localUser.inv || { dict:0, s1:0, s2:0, an:0, uva:0 },
+    };
+    SESSION.equiposAsignados = buildEquiposAsignadosFromStorage(SESSION.nombre, SESSION.equipoPatron||{m:'',c:'',d:'',v:''}, asignaciones);
+    SESSION.equipoPatron = {
+      m: SESSION.equiposAsignados.m[0]||'',
+      c: SESSION.equiposAsignados.c[0]||'',
+      d: SESSION.equiposAsignados.d[0]||'',
+      v: SESSION.equiposAsignados.v[0]||'',
+    };
+
+    // Combinar registros de la API con los locales (localStorage)
+    const savedLocal = localStorage.getItem('reg_'+u);
+    const localRegs = savedLocal ? JSON.parse(savedLocal) : [];
+    registros = regsApi.length > 0 ? regsApi.map(r => r.datos || r) : (localRegs.length > 0 ? localRegs : demoDicts());
+    errEl.style.display='none';
+    initApp();
+
+  } catch(e) {
+    // Fallback offline: buscar en array USUARIOS hardcodeado
+    const localUsers = (() => {
+      try {
+        const raw = localStorage.getItem('hc_usuarios_verificador');
+        if(raw){ const a=JSON.parse(raw); if(Array.isArray(a)&&a.length) return a; }
+      } catch(err){}
+      return USUARIOS;
+    })();
+    const f = localUsers.find(v=>v.user===u && v.pass===p);
+    if(!f){ errEl.style.display='block'; errEl.textContent='Usuario o contraseña incorrectos.'; document.getElementById('l-pass').value=''; return; }
+    errEl.style.display='none';
+    SESSION = JSON.parse(JSON.stringify(f));
+    SESSION.equiposAsignados = buildEquiposAsignadosFromStorage(SESSION.nombre, SESSION.equipoPatron||{m:'',c:'',d:'',v:''}, []);
+    SESSION.equipoPatron = {
+      m: SESSION.equiposAsignados.m[0]||'',
+      c: SESSION.equiposAsignados.c[0]||'',
+      d: SESSION.equiposAsignados.d[0]||'',
+      v: SESSION.equiposAsignados.v[0]||'',
+    };
+    const saved = localStorage.getItem('reg_'+u);
+    registros = saved ? JSON.parse(saved) : demoDicts();
+    initApp();
+  }
 }
 
 function doLogout(){
+  api.logout();
   SESSION=null; registros=[];
   document.getElementById('sc-login').classList.add('active');
   document.getElementById('sc-app').classList.remove('active');

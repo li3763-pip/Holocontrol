@@ -2,13 +2,29 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "holocontrol",
   "compatibility_date": "2026-05-05",
+  "main": "src/worker/index.js",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS"
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "holocontrol",
+      // Reemplaza este valor con el ID real de tu base D1.
+      // Créala con: wrangler d1 create holocontrol
+      "database_id": "YOUR_D1_DATABASE_ID"
+    }
+  ],
+  "vars": {
+    // Cambia este valor por un secreto real en producción.
+    // En producción usa: wrangler secret put JWT_SECRET
+    "JWT_SECRET": "holocontrol-dev-change-me"
+  }
 }
