@@ -114,6 +114,7 @@ async function doLogin(){
       id: apiUser.id,
       nombre: apiUser.nombre,
       socio: apiUser.socio,
+      zona: (verObj && verObj.zona) ? verObj.zona : (localUser.zona || ''),
       pass: undefined,
       // Priorizar datos de la API; fallback al array hardcodeado si la API no los tiene aún
       inv:   (verObj && verObj.inv)                              ? verObj.inv   : (localUser.inv  || { dict:0, s1:0, s2:0, an:0, uva:0 }),
@@ -135,7 +136,41 @@ async function doLogin(){
     // Combinar registros de la API con los locales (localStorage)
     const savedLocal = localStorage.getItem('reg_'+u);
     const localRegs = savedLocal ? JSON.parse(savedLocal) : [];
-    registros = regsApi.length > 0 ? regsApi.map(r => r.datos || r) : (localRegs.length > 0 ? localRegs : demoDicts());
+
+    if (regsApi.length > 0) {
+      const apiRecords = regsApi.map(r => r.datos || r);
+      // Incluir registros que sólo existen en localStorage (guardados offline o con fallo de red)
+      const apiIds = new Set(apiRecords.map(r => r.id).filter(Boolean));
+      const localOnly = localRegs.filter(r => r.id && !apiIds.has(r.id));
+      registros = [...apiRecords, ...localOnly];
+      registros.sort((a, b) => ((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
+    } else if (localRegs.length > 0) {
+      registros = localRegs;
+    } else {
+      registros = demoDicts();
+    }
+
+    // Auto-sincronizar registros pendientes al estar online (evita que datos offline queden sólo en localStorage).
+    // La condición (regsApi > 0 || localRegs > 0) garantiza que esta lógica no aplica cuando
+    // sólo hay datos demo (caso en que ambas fuentes están vacías).
+    if (SESSION.id && (regsApi.length > 0 || localRegs.length > 0)) {
+      const pending = registros.filter(r => r.status === 'ok');
+      if (pending.length > 0) {
+        Promise.all(pending.map(r =>
+          api.post('/api/registros', {
+            usuarioId: SESSION.id,
+            fecha: r.fechaDict || new Date().toISOString().slice(0, 10),
+            hora: r.hora || '',
+            notas: r.observaciones || '',
+            resultado: r.instrumentos && r.instrumentos.some(i => i.cumpleNom === 'C') ? 'aprobado' : (r.resultado || 'rechazado'),
+            datos: r
+          }).then(() => { r.status = 'sync'; }).catch(e => console.warn('auto-sync registro:', e.message))
+        )).then(() => {
+          localStorage.setItem('reg_'+u, JSON.stringify(registros));
+        });
+      }
+    }
+
     errEl.style.display='none';
     initApp();
 
