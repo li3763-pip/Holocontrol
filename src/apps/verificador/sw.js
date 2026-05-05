@@ -44,7 +44,7 @@ self.addEventListener('fetch', function(e){
   if (e.request.method !== 'GET') return;
   // No interceptar rutas del panel administrativo
   var url = new URL(e.request.url);
-  if (url.pathname.indexOf('/apps/admin/') !== -1) return;
+  if (url.pathname.includes('/apps/admin/')) return;
   e.respondWith(
     caches.match(e.request).then(function(cached){
       return cached || fetch(e.request).then(function(response){
