@@ -1017,18 +1017,6 @@
 <script src="js/papeleria.js"></script>
 <script src="js/usuarios.js"></script>
 <script src="js/equipo_patron.js"></script>
-<script>
-(function () {
-  function pedirPantallaCompleta() {
-    var el = document.documentElement;
-    var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-    if (fn && !document.fullscreenElement && !document.webkitFullscreenElement) {
-      fn.call(el).catch(function () {});
-    }
-  }
-  document.addEventListener('touchstart', pedirPantallaCompleta, { once: true });
-  document.addEventListener('click', pedirPantallaCompleta, { once: true });
-})();
-</script>
+
 </body>
 </html>
