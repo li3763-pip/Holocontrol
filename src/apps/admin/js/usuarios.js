@@ -2266,6 +2266,21 @@ let usuarios=[
   {nombre:'Personal Admin',user:'personal',pass:'personal123',pin:'1234',rol:'personal',socio:''},
 ];
 
+function syncVerificadoresALocalStorage(){
+  const verifs = usuarios.filter(u => u.rol === 'verificador').map(u => ({
+    user: u.user,
+    pass: u.pass,
+    nombre: u.nombre,
+    socio: u.socio || '',
+    zona: '',
+    inv: {dict:0, s1:0, s2:0, an:0, uva:0},
+    fdIni: 0, fdFin: 0,
+    fs1: '—', fs2: '—', fan: '—', fuva: '—',
+    equipoPatron: {m:'', c:'', d:'', v:''}
+  }));
+  try { localStorage.setItem('hc_usuarios_verificador', JSON.stringify(verifs)); } catch(e) {}
+}
+
 let SESSION={user:null,nombre:'',rol:'',socio:''};
 
 const PERMISOS={
@@ -2309,6 +2324,7 @@ function doLogin(){
   if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso a la app móvil.';document.getElementById('login-pass').value='';return;}
   err.style.display='none';
   SESSION={user:u.user,nombre:u.nombre,rol:u.rol,socio:u.socio};
+  syncVerificadoresALocalStorage();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('session-username').textContent=u.nombre;
   const badge=document.getElementById('session-role-badge');
@@ -2434,6 +2450,7 @@ function guardarUsuario(){
   }
   closeModal('modal-usuario');
   renderUsuarios();
+  syncVerificadoresALocalStorage();
 }
 
 /* ── GUARD en guardarTransferencia: socio solo transfiere desde lo suyo + PIN ── */

@@ -18,6 +18,19 @@ const USUARIOS = [
     equipoPatron:{ m:'M03', c:'C02', d:'', v:'V200' } },
 ];
 
+/* Devuelve la lista de usuarios activos: primero intenta desde localStorage
+   (sincronizado por el panel admin), cae al array USUARIOS hardcodeado como fallback. */
+function getUsuariosActivos(){
+  try {
+    const raw = localStorage.getItem('hc_usuarios_verificador');
+    if(raw){
+      const fromAdmin = JSON.parse(raw);
+      if(Array.isArray(fromAdmin) && fromAdmin.length > 0) return fromAdmin;
+    }
+  } catch(e){}
+  return USUARIOS;
+}
+
 /* Normaliza un objeto equipoPatron {m,c,d,v} de valores únicos a arrays por tipo. */
 function normalizarEquiposAsignados(ep){
   const out={m:[],c:[],d:[],v:[]};
@@ -56,7 +69,7 @@ function buildEquiposAsignadosFromStorage(nombre, fallbackSingle){
 function doLogin(){
   const u = document.getElementById('l-user').value.trim().toLowerCase();
   const p = document.getElementById('l-pass').value;
-  const f = USUARIOS.find(v=>v.user===u && v.pass===p);
+  const f = getUsuariosActivos().find(v=>v.user===u && v.pass===p);
   if(!f){ document.getElementById('l-err').style.display='block'; document.getElementById('l-pass').value=''; return; }
   document.getElementById('l-err').style.display='none';
   SESSION = JSON.parse(JSON.stringify(f)); // copia profunda para mutar inventario sin afectar USUARIOS

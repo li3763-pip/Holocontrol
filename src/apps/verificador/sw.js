@@ -42,6 +42,9 @@ self.addEventListener('activate', function(e){
 self.addEventListener('fetch', function(e){
   // Solo cachear peticiones GET del mismo origen
   if (e.request.method !== 'GET') return;
+  // No interceptar rutas del panel administrativo
+  var url = new URL(e.request.url);
+  if (url.pathname.indexOf('/apps/admin/') !== -1) return;
   e.respondWith(
     caches.match(e.request).then(function(cached){
       return cached || fetch(e.request).then(function(response){

@@ -2,10 +2,92 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=src/apps/verificador/index.html">
-<title>HoloVerifica</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#7B1C3A">
+<title>HoloControl — CAMEIN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="src/shared/assets/fonts.css">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --accent:#7B1C3A;--accent-dark:#5a1229;--accent-light:#f3e6ea;
+    --bg:#0F0E11;--surface:#1A191E;--border:#2E2C34;
+    --text:#F0EEF5;--text2:#A09BB0;--text3:#6B6478;
+    --blue:#1B4F8A;--blue-bg:#e8f0fb;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  }
+  body{
+    font-family:var(--sans);background:var(--bg);color:var(--text);
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:24px 16px;
+  }
+  .brand{text-align:center;margin-bottom:40px}
+  .brand-logo{
+    width:56px;height:56px;background:var(--accent);border-radius:14px;
+    display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;
+  }
+  .brand-logo svg{width:32px;height:32px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .brand-title{font-size:26px;font-weight:700;letter-spacing:-.5px}
+  .brand-title span{color:var(--accent)}
+  .brand-sub{font-size:13px;color:var(--text3);margin-top:4px;letter-spacing:.04em}
+  .cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px}
+  .card{
+    display:flex;align-items:center;gap:16px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;padding:18px 20px;
+    text-decoration:none;color:var(--text);
+    transition:border-color .15s,background .15s;cursor:pointer;
+  }
+  .card:hover{border-color:var(--accent);background:#231f29}
+  .card-icon{
+    width:44px;height:44px;border-radius:10px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .card-icon svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .card-icon.admin{background:var(--accent)}
+  .card-icon.verif{background:var(--blue)}
+  .card-body{flex:1;min-width:0}
+  .card-title{font-size:15px;font-weight:600}
+  .card-desc{font-size:11px;color:var(--text3);margin-top:2px}
+  .card-arrow{color:var(--text3);font-size:18px;flex-shrink:0}
+  .footer{margin-top:40px;font-size:10px;color:var(--text3);text-align:center;letter-spacing:.06em}
+</style>
 </head>
 <body>
-<p>Redirigiendo… <a href="src/apps/verificador/index.html">Haz clic aquí si no redirige automáticamente.</a></p>
+
+<div class="brand">
+  <div class="brand-logo">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+  </div>
+  <div class="brand-title">Holo<span>Control</span></div>
+  <div class="brand-sub">CAMEIN · Sistema de gestión</div>
+</div>
+
+<div class="cards">
+  <a class="card" href="src/apps/admin/index.html">
+    <div class="card-icon admin">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+    </div>
+    <div class="card-body">
+      <div class="card-title">Panel Administrativo</div>
+      <div class="card-desc">Gestión de hologramas, inventario y usuarios</div>
+    </div>
+    <div class="card-arrow">›</div>
+  </a>
+
+  <a class="card" href="src/apps/verificador/index.html">
+    <div class="card-icon verif">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    </div>
+    <div class="card-body">
+      <div class="card-title">App Verificadores</div>
+      <div class="card-desc">Dictámenes de campo — NOM-010-SCFI-1994</div>
+    </div>
+    <div class="card-arrow">›</div>
+  </a>
+</div>
+
+<div class="footer">v2.5.0 · RC-38 r1</div>
+
 </body>
 </html>
