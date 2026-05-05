@@ -10,6 +10,12 @@
  */
 
 const api = (() => {
+  // Cuando la app corre desde file:// (APK Android) las rutas relativas no funcionan.
+  // En ese caso se usa la URL absoluta del backend de Cloudflare Workers.
+  const BASE_URL = location.protocol === 'file:'
+    ? 'https://holocontrol.li3763.workers.dev'
+    : '';
+
   // Token lives only in memory (not localStorage) for security
   let _token = null;
 
@@ -26,7 +32,7 @@ const api = (() => {
   async function request(method, path, body) {
     const opts = { method, headers: headers() };
     if (body !== undefined) opts.body = JSON.stringify(body);
-    const res = await fetch(path, opts);
+    const res = await fetch(BASE_URL + path, opts);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const err = new Error(data.error || `HTTP ${res.status}`);
@@ -45,7 +51,7 @@ const api = (() => {
 
   function logout() {
     clearToken();
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    fetch(BASE_URL + '/api/auth/logout', { method: 'POST' }).catch(() => {});
   }
 
   return {
