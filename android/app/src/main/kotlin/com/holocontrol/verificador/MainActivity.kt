@@ -118,9 +118,9 @@ class MainActivity : AppCompatActivity() {
             loadWithOverviewMode = true
             // Habilitar geolocalización en el WebView
             setGeolocationEnabled(true)
-            // Allow mixed-content only if needed (Google Fonts CDN is HTTPS so this is safe).
+            // Permitir carga de recursos externos (Google Fonts, APIs) desde file://
             @Suppress("DEPRECATION")
-            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
+            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
 
         // Keep all navigation inside the WebView — never open an external browser.
@@ -232,8 +232,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        // The verificador app is served from the assets root which mirrors src/.
-        private const val APP_URL = "https://holocontrol.li3763.workers.dev/apps/verificador/"
+        // Carga local desde assets (src/ está mapeado como raíz de assets en build.gradle.kts)
+        private const val APP_URL = "file:///android_asset/apps/verificador/index.html"
         private const val REQUEST_LOCATION = 1001
     }
 }
