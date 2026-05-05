@@ -1,0 +1,31 @@
+# Archivos/directorios que NO deben subirse como assets estáticos.
+# Wrangler usa este archivo (similar a .gitignore) para filtrar la carpeta assets.
+
+# Dependencias y builds de herramientas
+node_modules/
+.wrangler/
+dist/
+
+# Control de versiones
+.git/
+
+# Código del Worker (solo se compila, no se sirve como asset)
+src/worker/
+
+# SQL / configuración backend
+schema.sql
+seed.sql
+wrangler.jsonc
+package.json
+package-lock.json
+
+# Android / builds nativos
+android/
+
+# Documentación interna y datos
+docs/
+data/
+
+# Variables de entorno
+.dev.vars
+.env
