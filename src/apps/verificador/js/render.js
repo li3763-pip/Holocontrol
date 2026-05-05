@@ -1597,6 +1597,16 @@ function doSync(){
     }
   };
 
+  // Si SESSION.id no está en memoria, intentar restaurarlo desde localStorage
+  if (SESSION && !SESSION.id) {
+    try {
+      const lastSession = JSON.parse(localStorage.getItem('hc_last_uid'));
+      if (lastSession && lastSession.id && SESSION.user && lastSession.user === SESSION.user) {
+        SESSION.id = lastSession.id;
+      }
+    } catch(e){ console.warn('doSync: no se pudo restaurar sesión desde localStorage', e); }
+  }
+
   if(SESSION && SESSION.id) {
     // Sincronizar registros pendientes con la API
     const pending = registros.filter(r => r.status === 'ok');
@@ -1618,8 +1628,8 @@ function doSync(){
       )
     ).finally(() => setTimeout(() => finish(anyOk), 500));
   } else {
-    // Sin sesión de API: solo sincronizar localmente
-    setTimeout(() => finish(true), 1800);
+    // Sin sesión de API disponible: registros quedan pendientes hasta el próximo login online
+    setTimeout(() => finish(false), 500);
   }
 }
 

@@ -132,6 +132,8 @@ async function doLogin(){
       d: SESSION.equiposAsignados.d[0]||'',
       v: SESSION.equiposAsignados.v[0]||'',
     };
+    // Persistir el ID de sesión para que doSync() pueda recuperarlo si SESSION.id se pierde
+    try { localStorage.setItem('hc_last_uid', JSON.stringify({id: apiUser.id, user: u})); } catch(e){ console.warn('hc_last_uid no se pudo guardar en localStorage:', e); }
 
     // Combinar registros de la API con los locales (localStorage)
     const savedLocal = localStorage.getItem('reg_'+u);
@@ -151,9 +153,7 @@ async function doLogin(){
     }
 
     // Auto-sincronizar registros pendientes al estar online (evita que datos offline queden sólo en localStorage).
-    // La condición (regsApi > 0 || localRegs > 0) garantiza que esta lógica no aplica cuando
-    // sólo hay datos demo (caso en que ambas fuentes están vacías).
-    if (SESSION.id && (regsApi.length > 0 || localRegs.length > 0)) {
+    if (SESSION.id) {
       const pending = registros.filter(r => r.status === 'ok');
       if (pending.length > 0) {
         Promise.all(pending.map(r =>

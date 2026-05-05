@@ -2715,7 +2715,7 @@ function abrirTransVerificador(idVer, modo){
   updTransInventario();
 }
 
-function guardarVerificador(){
+async function guardarVerificador(){
   const id=document.getElementById('mv-id').value;
   const nombre=document.getElementById('mv-nombre').value.trim();
   const socio=document.getElementById('mv-socio').value;
@@ -2724,11 +2724,26 @@ function guardarVerificador(){
   const zona=document.getElementById('mv-zona').value.trim();
   const tipoUsuario=document.getElementById('mv-tipo-usuario').value||'verificador';
   if(!nombre||!socio){alert('Nombre y socio son requeridos.');return;}
-  if(id){
-    const v=verificadores.find(v=>v.id===id);
-    if(v){Object.assign(v,{nombre,socio,tel,email,zona,tipoUsuario});}
-  } else {
-    verificadores.push({id:nextIdVer(),socio,nombre,tel,email,zona,activo:true,tipoUsuario,asignaciones:[]});
+  const payload={nombre,socio,tel,email,zona,tipoUsuario};
+  try {
+    if(id){
+      await api.put('/api/verificadores/'+id, payload);
+      const v=verificadores.find(v=>v.id===id);
+      if(v){Object.assign(v,payload);}
+    } else {
+      const res=await api.post('/api/verificadores', payload);
+      const newId = res && res.id ? res.id : nextIdVer();
+      verificadores.push({id:newId,socio,nombre,tel,email,zona,activo:true,tipoUsuario,asignaciones:[]});
+    }
+  } catch(e){
+    console.warn('guardarVerificador API error:', e);
+    // Fallback: actualizar solo en memoria si la API falla
+    if(id){
+      const v=verificadores.find(v=>v.id===id);
+      if(v){Object.assign(v,payload);}
+    } else {
+      verificadores.push({id:nextIdVer(),socio,nombre,tel,email,zona,activo:true,tipoUsuario,asignaciones:[]});
+    }
   }
   closeModal('modal-verificador');
   renderVerificadores();
@@ -3208,10 +3223,6 @@ async function cargarRegistrosVerif(){
   try {
     const data = await api.get('/api/registros');
     _registrosVerif = data.map(r => r.datos || r);
-    // Si la API devuelve array vacío, usar demo
-    if (_registrosVerif.length === 0) {
-      _registrosVerif = demoRegistrosVerif();
-    }
     _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
     _poblarFiltroVerificadorRV();
   } catch(e) {
