@@ -183,6 +183,10 @@ export default {
     const session = await getSession(request, env);
     const DB = env.DB;
 
+    if (!DB) {
+      return json({ error: 'Base de datos no configurada. Ejecuta los pasos de despliegue en README.' }, 503);
+    }
+
     try {
       // ── AUTH ─────────────────────────────────────────────────
       if (path === '/api/auth/login' && method === 'POST') {

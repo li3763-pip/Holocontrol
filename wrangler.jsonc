@@ -13,18 +13,19 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "holocontrol",
-      // Reemplaza este valor con el ID real de tu base D1.
-      // Créala con: wrangler d1 create holocontrol
-      "database_id": "YOUR_D1_DATABASE_ID"
-    }
-  ],
+  // Para habilitar persistencia en D1, crea la base de datos y descomenta:
+  //   wrangler d1 create holocontrol
+  // Luego reemplaza YOUR_D1_DATABASE_ID con el ID obtenido y descomenta el bloque:
+  // "d1_databases": [
+  //   {
+  //     "binding": "DB",
+  //     "database_name": "holocontrol",
+  //     "database_id": "YOUR_D1_DATABASE_ID"
+  //   }
+  // ],
   "vars": {
-    // Cambia este valor por un secreto real en producción.
     // En producción usa: wrangler secret put JWT_SECRET
     "JWT_SECRET": "holocontrol-dev-change-me"
   }
 }
+
