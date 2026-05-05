@@ -13,16 +13,13 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  // Para habilitar persistencia en D1, crea la base de datos y descomenta:
-  //   wrangler d1 create holocontrol
-  // Luego reemplaza YOUR_D1_DATABASE_ID con el ID obtenido y descomenta el bloque:
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "holocontrol",
-  //     "database_id": "YOUR_D1_DATABASE_ID"
-  //   }
-  // ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "holocontrol",
+      "database_id": "903b82d1-a8b7-49f5-83c2-72a747dbdb4a"
+    }
+  ],
   "vars": {
     // En producción usa: wrangler secret put JWT_SECRET
     "JWT_SECRET": "holocontrol-dev-change-me"
