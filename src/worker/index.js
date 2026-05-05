@@ -27,6 +27,7 @@
  *   GET    /api/recepciones
  *   POST   /api/recepciones       (admin/personal)
  *
+ *   GET    /api/registros           (admin/personal/socio: todos; verificador: propios)
  *   GET    /api/registros/:userId
  *   POST   /api/registros
  *   PUT    /api/registros/:id
@@ -296,6 +297,10 @@ export default {
       }
 
       // ── REGISTROS DE VERIFICACIÓN ────────────────────────────
+      if (path === '/api/registros' && method === 'GET') {
+        const err = requireAuth(session); if (err) return err;
+        return handleGetAllRegistros(session, DB);
+      }
       const mRegsUser = path.match(/^\/api\/registros\/(\d+)$/);
       if (mRegsUser && method === 'GET') {
         const err = requireAuth(session); if (err) return err;
@@ -663,6 +668,21 @@ async function handlePostRecepcion(request, DB) {
 }
 
 // ── REGISTROS VERIFICACIÓN ───────────────────────────────────────
+
+async function handleGetAllRegistros(session, DB) {
+  let query, params = [];
+  if (session.rol === 'verificador') {
+    query = 'SELECT * FROM registros_verificacion WHERE usuario_id = ? ORDER BY fecha DESC, id DESC';
+    params.push(session.id);
+  } else {
+    query = 'SELECT * FROM registros_verificacion ORDER BY fecha DESC, id DESC';
+  }
+  const { results } = await DB.prepare(query).bind(...params).all();
+  return json(results.map(r => ({
+    ...r,
+    datos: r.datos_json ? JSON.parse(r.datos_json) : null
+  })));
+}
 
 async function handleGetRegistros(userId, DB) {
   const { results } = await DB.prepare(
