@@ -52,7 +52,7 @@
 /* dias: array de strings, e.g. ['lun','mie','vie'] — vacío = todos los días */
 let asignacionesEquipo=[];
 
-/* Clave de localStorage compartida con la app del verificador */
+/* Clave de localStorage compartida con la app del verificador (fallback offline) */
 const EP_LS_KEY='hc_asignaciones_equipo';
 
 function epSaveToStorage(){
@@ -64,6 +64,30 @@ function epLoadFromStorage(){
     const raw=localStorage.getItem(EP_LS_KEY);
     if(raw) asignacionesEquipo=JSON.parse(raw);
   }catch(e){}
+}
+
+/* Guarda en API (con fallback a localStorage) */
+async function epSave(){
+  epSaveToStorage();
+}
+
+/* Elimina asignación de equipo en API */
+async function epDeleteRemote(equipoId){
+  try { await api.del('/api/equipos/'+encodeURIComponent(equipoId)); } catch(e) { console.warn('epDeleteRemote:', e.message); }
+}
+
+/* Agrega asignación de equipo en API */
+async function epPostRemote(asig){
+  try {
+    await api.post('/api/equipos', {
+      equipoId: asig.equipoId,
+      verificadorId: asig.verificadorId,
+      verificadorNombre: asig.verificadorNombre,
+      socio: asig.socio,
+      fecha: asig.fecha,
+      dias: asig.dias
+    });
+  } catch(e) { console.warn('epPostRemote:', e.message); }
 }
 
 epLoadFromStorage();
@@ -166,6 +190,8 @@ function renderEquipoPatron(){
   });
 
   document.getElementById('ep-resumen-tbody').innerHTML=tbody||`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Sin datos.</td></tr>`;
+
+  renderEquiposAsignados();
 }
 
 /* ── ASIGNAR EQUIPO ── */
@@ -218,7 +244,9 @@ function guardarAsigEquipo(){
 
   const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epa-dia-'+d);return cb&&cb.checked;});
 
-  asignacionesEquipo.push({equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
+  const nuevaAsig={equipoId,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias};
+  asignacionesEquipo.push(nuevaAsig);
+  await epPostRemote(nuevaAsig);
   epSaveToStorage();
   closeModal('modal-equipo-patron-asig');
   renderEquipoPatron();
@@ -228,14 +256,54 @@ function guardarAsigEquipo(){
 function confirmarLiberarEquipo(equipoId){
   const asig=getAsigEquipo(equipoId);
   if(!asig)return;
-  if(!confirm(`¿Liberar equipo ${equipoId} asignado a ${asig.verificadorNombre}?`))return;
+  // Permiso: socio solo puede liberar equipos de sus propios verificadores
+  if(SESSION.rol==='socio'&&asig.socio!==SESSION.socio){
+    alert('Solo puedes desasignar equipos de tus propios verificadores.');return;
+  }
+  if(!confirm(`¿Desasignar equipo ${equipoId} de ${asig.verificadorNombre}?`))return;
   liberarEquipo(equipoId);
 }
 
-function liberarEquipo(equipoId){
+async function liberarEquipo(equipoId){
   asignacionesEquipo=asignacionesEquipo.filter(a=>a.equipoId!==equipoId);
+  await epDeleteRemote(equipoId);
   epSaveToStorage();
   renderEquipoPatron();
+}
+
+/* ── RENDER EQUIPOS ASIGNADOS ── */
+function renderEquiposAsignados(){
+  const tbody=document.getElementById('ep-asignados-tbody');
+  if(!tbody) return;
+
+  // socio solo ve sus propios equipos asignados
+  const asigs=SESSION.rol==='socio'
+    ? asignacionesEquipo.filter(a=>a.socio===SESSION.socio)
+    : asignacionesEquipo.slice();
+
+  if(asigs.length===0){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:16px">Sin equipos asignados actualmente.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=asigs.map(a=>{
+    const eq=EQUIPO_PATRON_CATALOG.find(e=>e.id===a.equipoId);
+    const claseChip=eq?(eq.clase==='M1'?`<span class="tipo-badge t-s1">M1</span>`:`<span class="tipo-badge t-s2">F2</span>`):'';
+    const canLiberate=SESSION.rol==='admin'||SESSION.rol==='personal'||(SESSION.rol==='socio'&&a.socio===SESSION.socio);
+    const btnDesasig=canLiberate
+      ?`<button class="btn sm ghost" style="color:var(--red)" onclick="confirmarLiberarEquipo('${a.equipoId}')">Desasignar</button>`
+      :'—';
+    return`<tr>
+      <td style="font-family:var(--mono);font-weight:700;font-size:12px">${a.equipoId}</td>
+      <td style="font-family:var(--mono);font-size:11px">${eq?eq.serie:''}</td>
+      <td>${claseChip}</td>
+      <td>${a.verificadorNombre}</td>
+      <td><span class="chip ${scls(a.socio)}">${a.socio}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${a.fecha||'—'}</td>
+      <td>${epDiasLabel(a.dias)}</td>
+      <td>${btnDesasig}</td>
+    </tr>`;
+  }).join('');
 }
 
 /* ── ASIGNAR POR RANGO (múltiples rangos) ── */
@@ -388,14 +456,19 @@ function guardarAsigRangoEquipo(){
   const dias=EP_DIAS.map(d=>d.id).filter(d=>{const cb=document.getElementById('epra-dia-'+d);return cb&&cb.checked;});
   let asignados=0;
   const seen=new Set();
+  const nuevas=[];
   allItems.forEach(e=>{
     if(!seen.has(e.id)&&equipoLibre(e.id)){
       seen.add(e.id);
-      asignacionesEquipo.push({equipoId:e.id,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias});
+      const a={equipoId:e.id,verificadorId:verId,verificadorNombre:ver.nombre,socio:ver.socio,fecha,dias};
+      asignacionesEquipo.push(a);
+      nuevas.push(a);
       asignados++;
     }
   });
   closeModal('modal-equipo-patron-rango');
+  // Persistir en API y localStorage
+  Promise.all(nuevas.map(a=>epPostRemote(a))).catch(()=>{});
   epSaveToStorage();
   renderEquipoPatron();
   if(asignados>0) alert(`${asignados} equipo(s) asignados correctamente a ${ver.nombre}.`);
@@ -418,6 +491,13 @@ function abrirAsigPorTipo(serie){
   if(desdeEl) desdeEl.value=items[0].id;
   if(hastaEl) hastaEl.value=items[items.length-1].id;
   epraPreview();
+}
+
+/* ── ASIGNAR EQUIPO PATRÓN DESDE VERIFICADOR ── */
+function abrirAsigEquipoPatronVer(verId){
+  abrirAsigRangoEquipo();
+  const sel=document.getElementById('epra-verificador');
+  if(sel) sel.value=verId;
 }
 
 /* ── TÍTULOS Y NAVEGACIÓN ── */

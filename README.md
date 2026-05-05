@@ -110,12 +110,45 @@ PWABuilder y Bubblewrap generan este archivo automáticamente durante el proceso
 
 ---
 
-## Estado del proyecto
+## Backend Cloudflare D1 + Workers
+
+### Configuración inicial (solo la primera vez)
+
+```bash
+# 1. Crear la base D1
+wrangler d1 create holocontrol
+
+# 2. Copiar el database_id que imprime el comando anterior en wrangler.jsonc:
+#    "database_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# 3. Aplicar el schema y los datos de demostración
+wrangler d1 execute holocontrol --file=schema.sql
+wrangler d1 execute holocontrol --file=seed.sql
+
+# 4. Configurar el secreto JWT (en producción)
+wrangler secret put JWT_SECRET
+
+# 5. Desplegar
+wrangler deploy
+```
+
+### Variables de entorno
+
+| Variable | Descripción |
+|---|---|
+| `JWT_SECRET` | Clave secreta para firmar tokens JWT. Cámbiala en producción. |
+
+El binding `DB` (D1) se define en `wrangler.jsonc`.
+
+---
+
+
 
 ### Completado ✅
 
 - Vincular la app del verificador con el panel web (#1) — los verificadores y sus asignaciones se gestionan desde el panel admin y se leen en la app campo
 - Catálogo de equipo patrón y asignación a verificadores (#2) — módulo `equipo_patron.js` integrado en el panel admin; el verificador solo puede usar el equipo que le fue asignado
+- **Backend Cloudflare D1 + Workers** — API REST completa con autenticación JWT, base de datos D1, y migración automática de contraseñas plain→PBKDF2
 
 ### Pendiente
 

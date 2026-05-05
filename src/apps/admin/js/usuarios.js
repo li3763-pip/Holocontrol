@@ -1071,6 +1071,7 @@ function go(id){
     renderVerificadores();
   }
   if(id==='equipo-patron') renderEquipoPatron();
+  if(id==='registros-verif') renderRegistrosVerif();
   if(window.innerWidth<=700)closeSidebar();
 }
 
@@ -2265,6 +2266,21 @@ let usuarios=[
   {nombre:'Personal Admin',user:'personal',pass:'personal123',pin:'1234',rol:'personal',socio:''},
 ];
 
+function syncVerificadoresALocalStorage(){
+  const verifs = usuarios.filter(u => u.rol === 'verificador').map(u => ({
+    user: u.user,
+    pass: u.pass,
+    nombre: u.nombre,
+    socio: u.socio || '',
+    zona: '',
+    inv: {dict:0, s1:0, s2:0, an:0, uva:0},
+    fdIni: 0, fdFin: 0,
+    fs1: '—', fs2: '—', fan: '—', fuva: '—',
+    equipoPatron: {m:'', c:'', d:'', v:''}
+  }));
+  try { localStorage.setItem('hc_usuarios_verificador', JSON.stringify(verifs)); } catch(e) {}
+}
+
 let SESSION={user:null,nombre:'',rol:'',socio:''};
 
 const PERMISOS={
@@ -2298,16 +2314,36 @@ function puedeEditarSocio(socio){
 }
 
 /* ── LOGIN / LOGOUT ── */
-function doLogin(){
+async function doLogin(){
   const user=document.getElementById('login-user').value.trim();
   const pass=document.getElementById('login-pass').value;
-  const u=usuarios.find(u=>u.user===user&&u.pass===pass);
   const err=document.getElementById('login-err');
-  if(!u){err.style.display='block';document.getElementById('login-pass').value='';return;}
-  if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso mediante la app móvil.';document.getElementById('login-pass').value='';return;}
-  if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso a la app móvil.';document.getElementById('login-pass').value='';return;}
   err.style.display='none';
-  SESSION={user:u.user,nombre:u.nombre,rol:u.rol,socio:u.socio};
+
+  try {
+    const res = await api.login(user, pass);
+    const u = res.user;
+    if(u.rol==='verificador'){
+      err.style.display='block';
+      err.textContent='Los verificadores solo tienen acceso mediante la app móvil.';
+      document.getElementById('login-pass').value='';
+      return;
+    }
+    SESSION={user:u.user,id:u.id,nombre:u.nombre,rol:u.rol,socio:u.socio};
+    await loadDataFromAPI();
+    _afterLogin(u);
+  } catch(e) {
+    // Fallback offline: buscar en array local
+    const u=usuarios.find(u=>u.user===user&&u.pass===pass);
+    if(!u){err.style.display='block';err.textContent='Usuario o contraseña incorrectos.';document.getElementById('login-pass').value='';return;}
+    if(u.rol==='verificador'){err.style.display='block';err.textContent='Los verificadores solo tienen acceso mediante la app móvil.';document.getElementById('login-pass').value='';return;}
+    SESSION={user:u.user,id:null,nombre:u.nombre,rol:u.rol,socio:u.socio};
+    syncVerificadoresALocalStorage();
+    _afterLogin(u);
+  }
+}
+
+function _afterLogin(u){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('session-username').textContent=u.nombre;
   const badge=document.getElementById('session-role-badge');
@@ -2321,10 +2357,55 @@ function doLogin(){
 }
 
 function doLogout(){
-  SESSION={user:null,nombre:'',rol:'',socio:''};
+  api.logout();
+  SESSION={user:null,id:null,nombre:'',rol:'',socio:''};
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
+}
+
+/* Carga datos desde la API D1 y actualiza los arrays en memoria */
+async function loadDataFromAPI(){
+  try {
+    const [comprasData, recData, verifData, eqData, provData] = await Promise.all([
+      api.get('/api/compras'),
+      api.get('/api/recepciones'),
+      api.get('/api/verificadores'),
+      api.get('/api/equipos'),
+      api.get('/api/proveedores'),
+    ]);
+    compras = comprasData;
+    recepciones = recData.map(r => ({ ...r, porTipo: r.porTipo || {} }));
+    verificadores = verifData;
+    asignacionesEquipo = eqData.map(e => ({ ...e, dias: e.dias || [] }));
+    if(provData.proveedores) {
+      proveedores = provData.proveedores.map(p => ({
+        nombre: p.nombre, contacto: p.contacto, tel: p.tel,
+        precio: p.precio, fechaPrecio: p.fecha_precio
+      }));
+    }
+    if(provData.proveedorUVA) {
+      const u = provData.proveedorUVA;
+      proveedorUVA = { nombre: u.nombre, contacto: u.contacto, tel: u.tel, precio: u.precio, fechaPrecio: u.fecha_precio };
+    }
+    FOLIOS_REG = new Set();
+    recepciones.forEach(r => {
+      if(r.asignacion) {
+        Object.values(r.asignacion).forEach(tipos => {
+          Object.values(tipos).forEach(rangos => {
+            if(Array.isArray(rangos)) {
+              rangos.forEach(rng => {
+                const ini = parseInt(rng.ini), fin = parseInt(rng.fin);
+                if(!isNaN(ini) && !isNaN(fin)) for(let n=ini;n<=fin;n++) FOLIOS_REG.add(String(n).padStart(8,'0'));
+              });
+            }
+          });
+        });
+      }
+    });
+  } catch(e) {
+    console.warn('loadDataFromAPI falló, usando datos locales:', e.message);
+  }
 }
 
 /* ── APLICAR PERMISOS UI ── */
@@ -2396,14 +2477,19 @@ function editarUsuario(i){
   openModal('modal-usuario');
 }
 
-function eliminarUsuario(i){
+async function eliminarUsuario(i){
   if(usuarios[i].user===SESSION.user){alert('No puedes eliminar tu propio usuario.');return;}
   if(!confirm(`¿Eliminar usuario "${usuarios[i].nombre}"?`))return;
-  usuarios.splice(i,1);
-  renderUsuarios();
+  try {
+    if(SESSION.id && usuarios[i].id) await api.del('/api/usuarios/'+usuarios[i].id);
+    usuarios.splice(i,1);
+    renderUsuarios();
+  } catch(e) {
+    alert('Error al eliminar: '+e.message);
+  }
 }
 
-function guardarUsuario(){
+async function guardarUsuario(){
   const idx=document.getElementById('u-edit-idx').value;
   const nombre=document.getElementById('u-nombre').value.trim();
   const user=document.getElementById('u-user').value.trim();
@@ -2420,19 +2506,36 @@ function guardarUsuario(){
   if(pass&&pass.length<6){alert('La contraseña debe tener al menos 6 caracteres.');return;}
   if(pass&&pass!==pass2){alert('Las contraseñas no coinciden.');return;}
 
-  // Verificar usuario duplicado
   const dupIdx=usuarios.findIndex(u=>u.user===user);
   if(dupIdx!==-1&&(!esEdicion||dupIdx!==parseInt(idx))){alert('Ese nombre de usuario ya existe.');return;}
 
+  const body={nombre,user,rol,socio:(rol==='socio'||rol==='verificador')?socio:''};
+  if(pass) body.pass=pass;
+
+  try {
+    if(SESSION.id) {
+      if(esEdicion && usuarios[parseInt(idx)].id){
+        await api.put('/api/usuarios/'+usuarios[parseInt(idx)].id, body);
+      } else if(!esEdicion) {
+        const res = await api.post('/api/usuarios', body);
+        body.id = res.id;
+      }
+    }
+  } catch(e) {
+    if(e.status===409){alert('Ese nombre de usuario ya existe en el servidor.');return;}
+    console.warn('guardarUsuario API error:', e.message);
+  }
+
   if(esEdicion){
     const u=usuarios[parseInt(idx)];
-    u.nombre=nombre;u.user=user;u.rol=rol;u.socio=(rol==='socio'||rol==='verificador')?socio:'';
+    Object.assign(u,{nombre,user,rol,socio:body.socio});
     if(pass) u.pass=pass;
   } else {
-    usuarios.push({nombre,user,pass,rol,socio:(rol==='socio'||rol==='verificador')?socio:''});
+    usuarios.push({nombre,user,pass,rol,socio:body.socio,...(body.id?{id:body.id}:{})});
   }
   closeModal('modal-usuario');
   renderUsuarios();
+  syncVerificadoresALocalStorage();
 }
 
 /* ── GUARD en guardarTransferencia: socio solo transfiere desde lo suyo + PIN ── */
@@ -2557,6 +2660,7 @@ function renderVerificadores(){
         </div>
         ${canEdit?`<div style="display:flex;gap:4px">
           <button class="btn sm ghost" onclick="abrirAsigVer('${v.id}')" title="Asignar folios desde socio">＋</button>
+          <button class="btn sm ghost" onclick="abrirAsigEquipoPatronVer('${v.id}')" title="Asignar equipo patrón">⚖</button>
           <button class="btn sm ghost" onclick="abrirTransVerificador('${v.id}','libre')" title="Transferir inventario">↔</button>
           <button class="btn sm ghost" onclick="editarVerificador('${v.id}')" title="Editar">✏</button>
           <button class="btn sm ghost" onclick="toggleActivoVer('${v.id}')" title="${v.activo?'Desactivar':'Activar'}">${v.activo?'⏸':'▶'}</button>
@@ -3048,3 +3152,169 @@ function _pinVerify(){
 }
 // Arrancar con login
 document.getElementById('login-user').focus();
+
+/* ══════════════════════════════════════════════
+   MÓDULO: REGISTRO DE VERIFICACIONES
+   Lee los registros guardados por la app Verificador
+   en localStorage (claves reg_<username>).
+══════════════════════════════════════════════ */
+let _registrosVerif = []; // todos los registros de todos los verificadores
+
+/** Carga todos los registros de los verificadores desde localStorage */
+function cargarRegistrosVerif(){
+  _registrosVerif = [];
+  for(let i=0; i<localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(!key || !key.startsWith('reg_')) continue;
+    try {
+      const arr = JSON.parse(localStorage.getItem(key));
+      if(Array.isArray(arr)) _registrosVerif = _registrosVerif.concat(arr);
+    } catch(e){ /* registro corrupto, ignorar */ }
+  }
+  // Ordenar por fecha de creación descendente
+  _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? -1 : 1));
+  _poblarFiltroVerificadorRV();
+}
+
+/** Llena el select de verificadores con los nombres únicos encontrados */
+function _poblarFiltroVerificadorRV(){
+  const sel = document.getElementById('filtRV-verificador');
+  if(!sel) return;
+  const nombres = [...new Set(_registrosVerif.map(r=>r.verificador).filter(Boolean))].sort();
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Todos los verificadores</option>' +
+    nombres.map(n=>`<option value="${n}"${n===prev?' selected':''}>${n}</option>`).join('');
+}
+
+/** Calcula el resultado global de un registro (C si todos cumplen, NC si alguno no cumple) */
+function _resultadoGlobalRV(r){
+  if(!r.instrumentos || !r.instrumentos.length) return '—';
+  return r.instrumentos.some(i=>i.cumpleNom==='NC') ? 'NC' : 'C';
+}
+
+/** Renderiza la tabla de registros de verificaciones */
+function renderRegistrosVerif(){
+  cargarRegistrosVerif(); // refresca por si hay datos nuevos
+
+  const text = (document.getElementById('filtRV-text')?.value||'').toLowerCase();
+  const filtVerif = document.getElementById('filtRV-verificador')?.value||'';
+  const filtSocio = document.getElementById('filtRV-socio')?.value||'';
+  const filtRes = document.getElementById('filtRV-resultado')?.value||'';
+
+  const filtrados = _registrosVerif.filter(r=>{
+    if(filtVerif && r.verificador !== filtVerif) return false;
+    if(filtSocio && r.socio !== filtSocio) return false;
+    if(filtRes && _resultadoGlobalRV(r) !== filtRes) return false;
+    if(text){
+      const haystack = ((r.razonSocial||'')+(r.folioDict||'')+(r.verificador||'')+(r.giro||'')).toLowerCase();
+      if(!haystack.includes(text)) return false;
+    }
+    return true;
+  });
+
+  // Métricas
+  const cumple = filtrados.filter(r=>_resultadoGlobalRV(r)==='C').length;
+  const nc = filtrados.filter(r=>_resultadoGlobalRV(r)==='NC').length;
+  const instr = filtrados.reduce((s,r)=>s+(r.instrumentos?.length||0),0);
+  document.getElementById('rv-met-total').textContent = filtrados.length;
+  document.getElementById('rv-met-cumple').textContent = cumple;
+  document.getElementById('rv-met-nc').textContent = nc;
+  document.getElementById('rv-met-instr').textContent = instr;
+
+  const tbody = document.getElementById('tbody-registros-verif');
+  if(!filtrados.length){
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:24px;font-size:13px">Sin registros. Los dictámenes capturados desde la app verificador aparecerán aquí.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtrados.map(r=>{
+    const res = _resultadoGlobalRV(r);
+    const resChip = res==='C'
+      ? `<span class="chip completo" style="font-size:9px">Cumple</span>`
+      : res==='NC'
+        ? `<span class="chip" style="font-size:9px;background:var(--red-bg);color:var(--red)">No cumple</span>`
+        : `<span style="color:var(--text3);font-size:11px">—</span>`;
+    const socioChip = r.socio ? `<span class="chip ${scls(r.socio)}" style="font-size:9px">${r.socio}</span>` : '—';
+    return `<tr style="cursor:pointer" onclick="openDetalleReg('${r.id}')">
+      <td style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--blue)">${r.folioDict||'—'}</td>
+      <td style="font-size:11px">${r.fechaDict||'—'}</td>
+      <td style="font-size:11px">${r.fechaSol||'—'}</td>
+      <td style="font-size:12px;font-weight:500">${r.razonSocial||'—'}</td>
+      <td style="font-size:11px">${r.verificador||'—'}</td>
+      <td>${socioChip}</td>
+      <td style="font-size:11px;color:var(--text2)">${r.zona||'—'}</td>
+      <td style="text-align:center;font-size:12px;font-weight:600">${r.instrumentos?.length||0}</td>
+      <td style="text-align:center">${resChip}</td>
+      <td style="text-align:center"><button class="btn sm ghost" onclick="event.stopPropagation();openDetalleReg('${r.id}')">&#x1F50D;</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/** Abre el modal de detalle de un registro */
+function openDetalleReg(id){
+  const r = _registrosVerif.find(x=>x.id===id);
+  if(!r){ alert('Registro no encontrado'); return; }
+
+  const res = _resultadoGlobalRV(r);
+  const resColor = res==='C'?'var(--green)':res==='NC'?'var(--red)':'var(--text3)';
+  const resLabel = res==='C'?'C – Cumple NOM-010':res==='NC'?'NC – No Cumple':'—';
+
+  let instrHTML = '';
+  (r.instrumentos||[]).forEach((inst,i)=>{
+    const tipoLabel = inst.tipo==='M'?'Mecánico':inst.tipo==='E'?'Electrónico':inst.tipo==='H'?'Híbrido':(inst.tipo||'—');
+    const row = (lbl,val,extra='')=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px${extra}"><span style="color:var(--text3)">${lbl}</span><span>${val}</span></div>`;
+    instrHTML += `<div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">Instrumento ${inst.no||i+1} · ${tipoLabel}</div>
+      ${row('Marca / Modelo',`${inst.marca||'—'} ${inst.modelo||''}`)}
+      ${row('N° Serie',`<span style="font-family:var(--mono)">${inst.serie||'—'}</span>`)}
+      ${row('Máx / e(g)',`${inst.max||'—'} kg / ${inst.e||'—'} g`)}
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
+        ${['inspecVisual:Insp. Visual','exactitud:Exactitud','repetibilidad:Repetibilidad','excentricidad:Excentricidad'].map(p=>{
+          const [k,l]=p.split(':'); const v=inst[k]||'—';
+          const c=v==='C'?'color:var(--green)':v==='NC'?'color:var(--red)':v==='NA'?'color:var(--amber)':'';
+          return `<div style="background:var(--surface);border-radius:5px;padding:5px 8px"><div style="color:var(--text3);margin-bottom:2px">${l}</div><div style="font-weight:700;${c}">${v}</div></div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-weight:700">
+        <span style="color:var(--text3)">Cumple NOM-010</span>
+        <span style="color:${inst.cumpleNom==='C'?'var(--green)':inst.cumpleNom==='NC'?'var(--red)':'var(--amber)'}">${inst.cumpleNom||'—'}</span>
+      </div>
+      ${inst.holoProfeco?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-top:1px solid var(--border)"><span style="color:var(--text3)">Holograma</span><span style="font-family:var(--mono)">${inst.holoTipo||''} · PROFECO: ${inst.holoProfeco||'—'}${inst.holoU?' · UVA: '+inst.holoU:''}</span></div>`:''}
+    </div>`;
+  });
+
+  const pagoTotal = r.pago?.total ? '$'+parseFloat(r.pago.total).toLocaleString('es-MX',{minimumFractionDigits:2}) : '—';
+
+  const row = (lbl,val,extra='')=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px${extra}"><span style="color:var(--text3)">${lbl}</span><span>${val}</span></div>`;
+  document.getElementById('modal-rv-body').innerHTML = `
+    <div class="card" style="margin-bottom:10px;padding:12px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Folio de dictamen</div>
+          <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--blue)">Nº ${r.folioDict||'—'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;font-weight:700;color:${resColor}">${resLabel}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${new Date(r.createdAt||'').toLocaleString('es-MX',{timeZone:'America/Mexico_City'})}</div>
+        </div>
+      </div>
+      ${row('Razón social',`<strong>${r.razonSocial||'—'}</strong>`)}
+      ${row('Giro',r.giro||'—')}
+      ${row('Fecha solicitud',r.fechaSol||'—')}
+      ${row('Fecha dictamen',r.fechaDict||'—')}
+      ${row('Domicilio',`<span style="font-size:11px">${[r.calle,r.municipio,r.entidad,r.cp].filter(Boolean).join(', ')||'—'}</span>`)}
+      ${row('Verificador',r.verificador||'—')}
+      ${row('Socio / Zona',`${r.socio||'—'} · ${r.zona||'—'}`)}
+      ${row('Imparcialidad',`<span style="font-size:11px">${r.imparcialidad||'—'}</span>`)}
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span style="color:var(--text3)">Pago total</span><strong style="color:var(--blue)">${pagoTotal}</strong></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Instrumentos (${(r.instrumentos||[]).length})</div>
+    ${instrHTML||'<div style="color:var(--text3);font-size:12px;padding:8px 0">Sin instrumentos registrados</div>'}
+  `;
+
+  document.getElementById('modal-reg-verif').style.display='flex';
+}
+
+titles['registros-verif']='Registro de verificaciones';
+breadcrumbs['registros-verif']='Verificaciones';

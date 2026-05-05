@@ -1078,6 +1078,17 @@ function guardarRegistro(){
 
   registros.unshift(nuevo);
   localStorage.setItem('reg_'+SESSION.user, JSON.stringify(registros));
+  // Guardar también en la API (sin bloquear el flujo)
+  if(SESSION.id) {
+    api.post('/api/registros', {
+      usuarioId: SESSION.id,
+      fecha: nuevo.fecha || new Date().toISOString().slice(0,10),
+      hora: nuevo.hora || '',
+      notas: nuevo.notas || '',
+      resultado: nuevo.resultado || '',
+      datos: nuevo
+    }).catch(e => console.warn('sync registro API:', e.message));
+  }
   closeNuevo();
   renderHome();
   renderHist();
@@ -1572,14 +1583,28 @@ function appendColoniaACalle(col){
 function doSync(){
   const ic=document.getElementById('sync-icon');
   ic.classList.add('spin');
-  setTimeout(()=>{
+  const finish = () => {
     ic.classList.remove('spin');
     registros.forEach(r=>{ if(r.status==='ok') r.status='sync'; });
     localStorage.setItem('reg_'+SESSION.user, JSON.stringify(registros));
     renderHome(); renderHist();
     document.getElementById('p-sync').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
     toast('✓ Sincronizado con el sistema administrativo','ok');
-  },1800);
+  };
+  if(SESSION && SESSION.id) {
+    // Sincronizar registros pendientes con la API
+    const pending = registros.filter(r => r.status === 'ok');
+    Promise.all(pending.map(r => api.post('/api/registros', {
+      usuarioId: SESSION.id,
+      fecha: r.fecha || new Date().toISOString().slice(0,10),
+      hora: r.hora || '',
+      notas: r.notas || '',
+      resultado: r.resultado || '',
+      datos: r
+    }).catch(()=>{}))).finally(() => setTimeout(finish, 1800));
+  } else {
+    setTimeout(finish, 1800);
+  }
 }
 
 /* ══════════════════════════════════════════════

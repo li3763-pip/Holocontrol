@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "holocontrol",
+  "compatibility_date": "2026-05-05",
+  "main": "src/worker/index.js",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "holocontrol",
+      "database_id": "903b82d1-a8b7-49f5-83c2-72a747dbdb4a"
+    }
+  ],
+  "vars": {
+    // En producción usa: wrangler secret put JWT_SECRET
+    "JWT_SECRET": "holocontrol-dev-change-me"
+  }
+}
+
