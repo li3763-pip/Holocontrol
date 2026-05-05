@@ -460,7 +460,37 @@ async function handleGetVerificadores(session, DB) {
     asigMap[a.ver_id].push(a);
   });
 
-  const data = results.map(v => ({ ...v, asignaciones: asigMap[v.id] || [] }));
+  const data = results.map(v => {
+    const asigs = asigMap[v.id] || [];
+
+    // Derivar inventario y rangos de folios desde las asignaciones del panel admin
+    const inv = { dict: 0, s1: 0, s2: 0, an: 0, uva: 0 };
+    let fdIni = 0, fdFin = 0;
+    let fs1 = '—', fs2 = '—', fan = '—', fuva = '—';
+
+    asigs.forEach(a => {
+      if (a.tipo === 'dictamen') {
+        fdIni = parseInt(a.folio_ini) || 0;
+        fdFin = parseInt(a.folio_fin) || 0;
+        inv.dict = a.cant || 0;
+      } else if (a.tipo === 'holograma') {
+        const sub = (a.subtipo || '').toLowerCase();
+        const rango = `${a.folio_ini}→${a.folio_fin}`;
+        if (sub.includes('1er') || sub.includes('primero') || sub.includes('s1')) {
+          fs1 = rango; inv.s1 = a.cant || 0;
+        } else if (sub.includes('2do') || sub.includes('segundo') || sub.includes('s2')) {
+          fs2 = rango; inv.s2 = a.cant || 0;
+        } else if (sub.includes('anual') || sub.includes('an')) {
+          fan = rango; inv.an = a.cant || 0;
+        }
+      } else if (a.tipo === 'uva') {
+        fuva = `${a.folio_ini}→${a.folio_fin}`;
+        inv.uva = a.cant || 0;
+      }
+    });
+
+    return { ...v, asignaciones: asigs, inv, fdIni, fdFin, fs1, fs2, fan, fuva };
+  });
   return json(data);
 }
 

@@ -91,9 +91,10 @@ async function doLogin(){
     }
     // Buscar datos adicionales del verificador
     let asignaciones = [];
+    let verObj = null;
     try {
       const verifList = await api.get('/api/verificadores');
-      const verObj = verifList.find(v => v.nombre === apiUser.nombre);
+      verObj = verifList.find(v => v.nombre === apiUser.nombre) || null;
       if(verObj) asignaciones = verObj.asignaciones || [];
     } catch(e){}
 
@@ -114,7 +115,14 @@ async function doLogin(){
       nombre: apiUser.nombre,
       socio: apiUser.socio,
       pass: undefined,
-      inv: localUser.inv || { dict:0, s1:0, s2:0, an:0, uva:0 },
+      // Priorizar datos de la API; fallback al array hardcodeado si la API no los tiene aún
+      inv:   (verObj && verObj.inv)                              ? verObj.inv   : (localUser.inv  || { dict:0, s1:0, s2:0, an:0, uva:0 }),
+      fdIni: (verObj && verObj.fdIni != null && verObj.fdIni)   ? verObj.fdIni : (localUser.fdIni || 0),
+      fdFin: (verObj && verObj.fdFin != null && verObj.fdFin)   ? verObj.fdFin : (localUser.fdFin || 0),
+      fs1:   (verObj && verObj.fs1  && verObj.fs1  !== '—')     ? verObj.fs1   : (localUser.fs1  || '—'),
+      fs2:   (verObj && verObj.fs2  && verObj.fs2  !== '—')     ? verObj.fs2   : (localUser.fs2  || '—'),
+      fan:   (verObj && verObj.fan  && verObj.fan  !== '—')     ? verObj.fan   : (localUser.fan  || '—'),
+      fuva:  (verObj && verObj.fuva && verObj.fuva !== '—')     ? verObj.fuva  : (localUser.fuva || '—'),
     };
     SESSION.equiposAsignados = buildEquiposAsignadosFromStorage(SESSION.nombre, SESSION.equipoPatron||{m:'',c:'',d:'',v:''}, asignaciones);
     SESSION.equipoPatron = {
