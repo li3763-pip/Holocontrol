@@ -461,6 +461,13 @@ function abrirAsigPorTipo(serie){
   epraPreview();
 }
 
+/* ── ASIGNAR EQUIPO PATRÓN DESDE VERIFICADOR ── */
+function abrirAsigEquipoPatronVer(verId){
+  abrirAsigRangoEquipo();
+  const sel=document.getElementById('epra-verificador');
+  if(sel) sel.value=verId;
+}
+
 /* ── TÍTULOS Y NAVEGACIÓN ── */
 titles['equipo-patron']='Catálogo de equipo patrón';
 breadcrumbs['equipo-patron']='Catálogos';

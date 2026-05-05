@@ -2557,6 +2557,7 @@ function renderVerificadores(){
         </div>
         ${canEdit?`<div style="display:flex;gap:4px">
           <button class="btn sm ghost" onclick="abrirAsigVer('${v.id}')" title="Asignar folios desde socio">＋</button>
+          <button class="btn sm ghost" onclick="abrirAsigEquipoPatronVer('${v.id}')" title="Asignar equipo patrón">⚖</button>
           <button class="btn sm ghost" onclick="abrirTransVerificador('${v.id}','libre')" title="Transferir inventario">↔</button>
           <button class="btn sm ghost" onclick="editarVerificador('${v.id}')" title="Editar">✏</button>
           <button class="btn sm ghost" onclick="toggleActivoVer('${v.id}')" title="${v.activo?'Desactivar':'Activar'}">${v.activo?'⏸':'▶'}</button>
