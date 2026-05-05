@@ -233,7 +233,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         // The verificador app is served from the assets root which mirrors src/.
-        private const val APP_URL = "file:///android_asset/apps/verificador/index.html"
+        private const val APP_URL = "https://holocontrol.li3763.workers.dev/apps/verificador/"
         private const val REQUEST_LOCATION = 1001
     }
 }
