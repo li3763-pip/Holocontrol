@@ -1583,27 +1583,43 @@ function appendColoniaACalle(col){
 function doSync(){
   const ic=document.getElementById('sync-icon');
   ic.classList.add('spin');
-  const finish = () => {
+
+  const finish = (ok) => {
     ic.classList.remove('spin');
-    registros.forEach(r=>{ if(r.status==='ok') r.status='sync'; });
-    localStorage.setItem('reg_'+SESSION.user, JSON.stringify(registros));
-    renderHome(); renderHist();
-    document.getElementById('p-sync').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-    toast('✓ Sincronizado con el sistema administrativo','ok');
+    if (ok) {
+      registros.forEach(r=>{ if(r.status==='ok') r.status='sync'; });
+      localStorage.setItem('reg_'+SESSION.user, JSON.stringify(registros));
+      renderHome(); renderHist();
+      document.getElementById('p-sync').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+      toast('✓ Sincronizado con el sistema administrativo','ok');
+    } else {
+      toast('⚠ Sin conexión — registros guardados localmente','err');
+    }
   };
+
   if(SESSION && SESSION.id) {
     // Sincronizar registros pendientes con la API
     const pending = registros.filter(r => r.status === 'ok');
-    Promise.all(pending.map(r => api.post('/api/registros', {
-      usuarioId: SESSION.id,
-      fecha: r.fecha || new Date().toISOString().slice(0,10),
-      hora: r.hora || '',
-      notas: r.notas || '',
-      resultado: r.resultado || '',
-      datos: r
-    }).catch(()=>{}))).finally(() => setTimeout(finish, 1800));
+    if (!pending.length) {
+      setTimeout(() => finish(true), 800);
+      return;
+    }
+    let anyOk = false;
+    Promise.all(
+      pending.map(r =>
+        api.post('/api/registros', {
+          usuarioId: SESSION.id,
+          fecha:     r.fechaDict || new Date().toISOString().slice(0, 10),
+          hora:      r.hora || '',
+          notas:     r.observaciones || '',
+          resultado: r.instrumentos && r.instrumentos.some(i => i.cumpleNom === 'C') ? 'aprobado' : (r.resultado || 'rechazado'),
+          datos:     r
+        }).then(() => { anyOk = true; }).catch(() => {})
+      )
+    ).finally(() => setTimeout(() => finish(anyOk), 500));
   } else {
-    setTimeout(finish, 1800);
+    // Sin sesión de API: solo sincronizar localmente
+    setTimeout(() => finish(true), 1800);
   }
 }
 
