@@ -3180,6 +3180,7 @@ document.getElementById('login-user').focus();
    en localStorage (claves reg_<username>).
 ══════════════════════════════════════════════ */
 let _registrosVerif = []; // todos los registros de todos los verificadores
+let _fotosDetalleAdmin = []; // fotos del registro actualmente abierto: [[src,...], ...]
 
 /** Retorna registros de muestra para mostrar cuando no hay datos reales */
 function demoRegistrosVerif(){
@@ -3330,6 +3331,9 @@ function openDetalleReg(id){
   const r = _registrosVerif.find(x=>x.id===id);
   if(!r){ alert('Registro no encontrado'); return; }
 
+  // Pre-cargar fotos por índice de instrumento para evitar base64 en atributos onclick
+  _fotosDetalleAdmin = (r.instrumentos||[]).map(inst => inst.fotos || []);
+
   const res = _resultadoGlobalRV(r);
   const resColor = res==='C'?'var(--green)':res==='NC'?'var(--red)':'var(--text3)';
   const resLabel = res==='C'?'C – Cumple NOM-010':res==='NC'?'NC – No Cumple':'—';
@@ -3338,6 +3342,7 @@ function openDetalleReg(id){
   (r.instrumentos||[]).forEach((inst,i)=>{
     const tipoLabel = inst.tipo==='M'?'Mecánico':inst.tipo==='E'?'Electrónico':inst.tipo==='H'?'Híbrido':(inst.tipo||'—');
     const row = (lbl,val,extra='')=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px${extra}"><span style="color:var(--text3)">${lbl}</span><span>${val}</span></div>`;
+    const fotos = inst.fotos || [];
     instrHTML += `<div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid var(--border)">
       <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">Instrumento ${inst.no||i+1} · ${tipoLabel}</div>
       ${row('Marca / Modelo',`${inst.marca||'—'} ${inst.modelo||''}`)}
@@ -3356,6 +3361,12 @@ function openDetalleReg(id){
         <span style="color:${inst.cumpleNom==='C'?'var(--green)':inst.cumpleNom==='NC'?'var(--red)':'var(--amber)'}">${inst.cumpleNom||'—'}</span>
       </div>
       ${inst.holoProfeco?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-top:1px solid var(--border)"><span style="color:var(--text3)">Holograma</span><span style="font-family:var(--mono)">${inst.holoTipo||''} · PROFECO: ${inst.holoProfeco||'—'}${inst.holoU?' · UVA: '+inst.holoU:''}</span></div>`:''}
+      ${fotos.length?`<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">Evidencia fotográfica (${fotos.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${fotos.map((src,pi)=>`<img src="${src}" alt="foto ${pi+1}" loading="lazy" onclick="abrirFotoAdminIdx(${i},${pi})" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:zoom-in">`).join('')}
+        </div>
+      </div>`:''}
     </div>`;
   });
 
@@ -3389,6 +3400,24 @@ function openDetalleReg(id){
   `;
 
   document.getElementById('modal-reg-verif').style.display='flex';
+}
+
+/** Abre una foto de evidencia a tamaño completo en una capa ligera */
+function abrirFotoAdminIdx(instrIdx, photoIdx){
+  const src = (_fotosDetalleAdmin[instrIdx] || [])[photoIdx];
+  if(!src) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+  overlay.setAttribute('tabindex','-1');
+  overlay.onclick=()=>document.body.removeChild(overlay);
+  overlay.onkeydown=e=>{ if(e.key==='Escape') document.body.removeChild(overlay); };
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = 'Foto '+(photoIdx+1);
+  img.style.cssText='max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6)';
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+  overlay.focus();
 }
 
 titles['registros-verif']='Registro de verificaciones';
