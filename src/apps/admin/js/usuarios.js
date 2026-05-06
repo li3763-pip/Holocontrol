@@ -2367,17 +2367,33 @@ function doLogout(){
 /* Carga datos desde la API D1 y actualiza los arrays en memoria */
 async function loadDataFromAPI(){
   try {
-    const [comprasData, recData, verifData, eqData, provData] = await Promise.all([
+    const [comprasData, recData, verifData, eqData, provData, usuariosData] = await Promise.all([
       api.get('/api/compras'),
       api.get('/api/recepciones'),
       api.get('/api/verificadores'),
       api.get('/api/equipos'),
       api.get('/api/proveedores'),
+      api.get('/api/usuarios'),
     ]);
     compras = comprasData;
     recepciones = recData.map(r => ({ ...r, porTipo: r.porTipo || {} }));
     verificadores = verifData;
     asignacionesEquipo = eqData.map(e => ({ ...e, dias: e.dias || [] }));
+    if (Array.isArray(usuariosData)) {
+      // Merge con locales: preservar pass/pin de los que ya están en memoria (para fallback offline)
+      const localMap = {};
+      usuarios.forEach(u => { localMap[u.user] = u; });
+      usuarios = usuariosData.map(u => ({
+        ...(localMap[u.user] || {}),
+        id: u.id,
+        nombre: u.nombre,
+        user: u.user,
+        rol: u.rol,
+        socio: u.socio_id || '',
+        activo: u.activo,
+      }));
+      syncVerificadoresALocalStorage();
+    }
     if(provData.proveedores) {
       proveedores = provData.proveedores.map(p => ({
         nombre: p.nombre, contacto: p.contacto, tel: p.tel,
