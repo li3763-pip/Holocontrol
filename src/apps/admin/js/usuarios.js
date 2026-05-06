@@ -3356,6 +3356,12 @@ function openDetalleReg(id){
         <span style="color:${inst.cumpleNom==='C'?'var(--green)':inst.cumpleNom==='NC'?'var(--red)':'var(--amber)'}">${inst.cumpleNom||'—'}</span>
       </div>
       ${inst.holoProfeco?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-top:1px solid var(--border)"><span style="color:var(--text3)">Holograma</span><span style="font-family:var(--mono)">${inst.holoTipo||''} · PROFECO: ${inst.holoProfeco||'—'}${inst.holoU?' · UVA: '+inst.holoU:''}</span></div>`:''}
+      ${inst.fotos&&inst.fotos.length?`<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+        <div style="font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">Evidencia fotográfica (${inst.fotos.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${inst.fotos.map((src,pi)=>`<img src="${src}" alt="foto ${pi+1}" loading="lazy" onclick="abrirFotoAdmin('${src.replace(/'/g,"\\'")}',${pi+1})" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:zoom-in">`).join('')}
+        </div>
+      </div>`:''}
     </div>`;
   });
 
@@ -3389,6 +3395,21 @@ function openDetalleReg(id){
   `;
 
   document.getElementById('modal-reg-verif').style.display='flex';
+}
+
+/** Abre una foto de evidencia a tamaño completo en una capa ligera */
+function abrirFotoAdmin(src, num){
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+  overlay.onclick=()=>document.body.removeChild(overlay);
+  overlay.onkeydown=e=>{ if(e.key==='Escape') document.body.removeChild(overlay); };
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = 'Foto '+num;
+  img.style.cssText='max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6)';
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+  overlay.focus();
 }
 
 titles['registros-verif']='Registro de verificaciones';
