@@ -1089,7 +1089,12 @@ function guardarRegistro(){
       datos: nuevo
     }).then(() => {
       nuevo.status = 'sync';
-      localStorage.setItem('reg_'+SESSION.user, JSON.stringify(registros));
+      try {
+        localStorage.setItem('reg_'+SESSION.user, JSON.stringify(registros));
+      } catch(e2) {
+        nuevo.status = 'ok';
+        console.warn('sync registro localStorage:', e2.message);
+      }
     }).catch(e => console.warn('sync registro API:', e.message));
   }
   closeNuevo();
