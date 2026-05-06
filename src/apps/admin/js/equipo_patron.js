@@ -192,6 +192,8 @@ function renderEquipoPatron(){
   document.getElementById('ep-resumen-tbody').innerHTML=tbody||`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Sin datos.</td></tr>`;
 
   renderEquiposAsignados();
+  // Refresh catalog tab if currently visible
+  if(epCurrentTab==='catalogo') epRenderCatalogo();
 }
 
 /* ── ASIGNAR EQUIPO ── */
@@ -224,7 +226,7 @@ function abrirAsigEquipo(equipoId){
   openModal('modal-equipo-patron-asig');
 }
 
-function guardarAsigEquipo(){
+async function guardarAsigEquipo(){
   const equipoId=document.getElementById('epa-equipo-id').value;
   const verId=document.getElementById('epa-verificador').value;
   const fecha=document.getElementById('epa-fecha').value;
@@ -503,3 +505,85 @@ function abrirAsigEquipoPatronVer(verId){
 /* ── TÍTULOS Y NAVEGACIÓN ── */
 titles['equipo-patron']='Catálogo de equipo patrón';
 breadcrumbs['equipo-patron']='Catálogos';
+
+/* ── SUB-TABS ── */
+let epCurrentTab='resumen';
+
+function epSwitchTab(tab){
+  epCurrentTab=tab;
+  ['resumen','catalogo','asignados'].forEach(t=>{
+    const panel=document.getElementById('ep-panel-'+t);
+    const tabEl=document.getElementById('ep-tab-'+t);
+    if(panel) panel.style.display=t===tab?'':'none';
+    if(tabEl){tabEl.classList.toggle('active',t===tab);}
+  });
+  const hint=document.getElementById('ep-sec-hint');
+  if(hint){
+    if(tab==='catalogo') hint.textContent='Listado completo de todos los equipos patrón con su estado actual.';
+    else if(tab==='asignados') hint.textContent='Equipos patrón actualmente asignados a verificadores.';
+    else hint.textContent='Resumen por tipo de equipo patrón. Usa «Asignar» en cada tipo para asignar al verificador.';
+  }
+  if(tab==='catalogo') epRenderCatalogo();
+}
+
+/* ── RENDER CATÁLOGO COMPLETO ── */
+function epRenderCatalogo(){
+  const tbody=document.getElementById('ep-catalogo-tbody');
+  if(!tbody) return;
+
+  const buscar=(document.getElementById('ep-cat-buscar')||{value:''}).value.trim().toUpperCase();
+  const filSerie=(document.getElementById('ep-cat-serie')||{value:''}).value;
+  const filClase=(document.getElementById('ep-cat-clase')||{value:''}).value;
+  const filEstado=(document.getElementById('ep-cat-estado')||{value:''}).value;
+  const canEdit=SESSION.rol==='admin'||SESSION.rol==='personal'||SESSION.rol==='socio';
+
+  let items=EQUIPO_PATRON_CATALOG.slice();
+  if(buscar) items=items.filter(e=>e.id.includes(buscar));
+  if(filSerie) items=items.filter(e=>e.serie===filSerie);
+  if(filClase) items=items.filter(e=>e.clase===filClase);
+  if(filEstado==='libre') items=items.filter(e=>equipoLibre(e.id));
+  else if(filEstado==='asignado') items=items.filter(e=>!equipoLibre(e.id));
+
+  const countEl=document.getElementById('ep-cat-count');
+  if(countEl) countEl.textContent=`Mostrando ${items.length.toLocaleString()} de ${EQUIPO_PATRON_CATALOG.length.toLocaleString()} equipos`;
+
+  if(!items.length){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">Sin resultados para los filtros aplicados.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=items.map(e=>{
+    const asig=getAsigEquipo(e.id);
+    const libre=!asig;
+    const claseChip=e.clase==='M1'
+      ?`<span class="tipo-badge t-s1">M1</span>`
+      :`<span class="tipo-badge t-s2">F2</span>`;
+    const estadoBadge=libre
+      ?`<span class="chip p2" style="font-size:9px;background:rgba(34,197,94,.12);color:var(--green)">Libre</span>`
+      :`<span class="chip p1" style="font-size:9px;background:rgba(59,130,246,.12);color:var(--blue)">Asignado</span>`;
+    const verNombre=asig?asig.verificadorNombre:'—';
+    const socioChip=asig?`<span class="chip ${scls(asig.socio)}">${asig.socio}</span>`:'—';
+    const fechaAsig=asig?(asig.fecha||'—'):'—';
+    let accion='—';
+    if(canEdit){
+      if(libre){
+        accion=`<button class="btn sm primary" onclick="abrirAsigEquipo('${e.id}')">Asignar</button>`;
+      } else {
+        const canLiberate=SESSION.rol==='admin'||SESSION.rol==='personal'||(SESSION.rol==='socio'&&asig.socio===SESSION.socio);
+        if(canLiberate){
+          accion=`<button class="btn sm ghost" style="color:var(--red)" onclick="confirmarLiberarEquipo('${e.id}')">Desasignar</button>`;
+        }
+      }
+    }
+    return`<tr>
+      <td style="font-family:var(--mono);font-weight:700;font-size:12px">${e.id}</td>
+      <td style="font-family:var(--mono);font-size:11px">${e.serie}</td>
+      <td>${claseChip}</td>
+      <td style="font-size:12px">${verNombre}</td>
+      <td>${socioChip}</td>
+      <td style="font-size:11px;color:var(--text2)">${fechaAsig}</td>
+      <td>${estadoBadge}</td>
+      <td>${accion}</td>
+    </tr>`;
+  }).join('');
+}
