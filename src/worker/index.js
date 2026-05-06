@@ -727,6 +727,16 @@ async function handleGetRegistros(userId, DB) {
 async function handlePostRegistro(request, session, DB) {
   const body = await request.json();
   const userId = body.usuarioId || session.id;
+
+  // Deduplication: if the client record already has a local ID, prevent duplicate inserts
+  const localId = body.datos?.id;
+  if (localId) {
+    const existing = await DB.prepare(
+      "SELECT id FROM registros_verificacion WHERE usuario_id = ? AND json_extract(datos_json, '$.id') = ?"
+    ).bind(userId, localId).first();
+    if (existing) return json({ id: existing.id }, 200);
+  }
+
   const { meta } = await DB.prepare(
     'INSERT INTO registros_verificacion (usuario_id, folio_dict, folio_holo, folio_uva, marca, modelo, tipo_instrumento, resultado, fecha, hora, notas, datos_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
   ).bind(
