@@ -3402,6 +3402,7 @@ function abrirFotoAdmin(src, num){
   const overlay = document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
   overlay.onclick=()=>document.body.removeChild(overlay);
+  overlay.setAttribute('tabindex','-1');
   overlay.onkeydown=e=>{ if(e.key==='Escape') document.body.removeChild(overlay); };
   const img = document.createElement('img');
   img.src = src;
