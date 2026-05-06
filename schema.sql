@@ -186,7 +186,7 @@ CREATE INDEX IF NOT EXISTS idx_verificadores_socio ON verificadores(socio_id);
 CREATE INDEX IF NOT EXISTS idx_asignaciones_equipo_verif ON asignaciones_equipo(verificador_id);
 CREATE INDEX IF NOT EXISTS idx_compras_partes_folio ON compras_partes(folio);
 CREATE INDEX IF NOT EXISTS idx_recepciones_orden ON recepciones(orden);
-CREATE INDEX IF NOT EXISTS idx_registros_local_id ON registros_verificacion(json_extract(datos_json, '$.id'));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_registros_local_id ON registros_verificacion(usuario_id, json_extract(datos_json, '$.id'));
 CREATE INDEX IF NOT EXISTS idx_registros_usuario ON registros_verificacion(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_transferencias_de ON transferencias(de);
 CREATE INDEX IF NOT EXISTS idx_transferencias_a ON transferencias(a);

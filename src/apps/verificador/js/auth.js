@@ -154,8 +154,9 @@ async function doLogin(){
 
     // Auto-sincronizar registros pendientes al estar online (evita que datos offline queden sólo en localStorage).
     if (SESSION.id) {
-      const pending = registros.filter(r => r.status === 'ok');
+      const pending = registros.filter(r => r.status === 'ok' && !_syncingIds.has(r.id));
       if (pending.length > 0) {
+        pending.forEach(r => _syncingIds.add(r.id));
         Promise.all(pending.map(r =>
           api.post('/api/registros', {
             usuarioId: SESSION.id,
@@ -164,7 +165,9 @@ async function doLogin(){
             notas: r.observaciones || '',
             resultado: r.instrumentos && r.instrumentos.some(i => i.cumpleNom === 'C') ? 'aprobado' : (r.resultado || 'rechazado'),
             datos: r
-          }).then(() => { r.status = 'sync'; }).catch(e => console.warn('auto-sync registro:', e.message))
+          }).then(() => { r.status = 'sync'; })
+            .catch(e => console.warn('auto-sync registro:', e.message))
+            .finally(() => _syncingIds.delete(r.id))
         )).then(() => {
           localStorage.setItem('reg_'+u, JSON.stringify(registros));
         });

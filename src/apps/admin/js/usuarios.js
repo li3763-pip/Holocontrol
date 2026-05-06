@@ -3223,7 +3223,7 @@ function demoRegistrosVerif(){
 async function cargarRegistrosVerif(){
   try {
     const data = await api.get('/api/registros');
-    _registrosVerif = data.map(r => r.datos || r);
+    _registrosVerif = _deduplicarRegistros(data.map(r => r.datos || r));
     _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
     _poblarFiltroVerificadorRV();
   } catch(e) {
@@ -3242,9 +3242,21 @@ async function cargarRegistrosVerif(){
     if (_registrosVerif.length === 0) {
       _registrosVerif = demoRegistrosVerif();
     }
+    _registrosVerif = _deduplicarRegistros(_registrosVerif);
     _registrosVerif.sort((a,b)=>((b.createdAt||'') > (a.createdAt||'') ? 1 : -1));
     _poblarFiltroVerificadorRV();
   }
+}
+
+/** Elimina registros duplicados (mismo id local), conservando el primero de cada grupo */
+function _deduplicarRegistros(lista){
+  const seen = new Set();
+  return lista.filter(r => {
+    if(!r.id) return true;
+    if(seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
 }
 
 /** Llena el select de verificadores con los nombres únicos encontrados */
