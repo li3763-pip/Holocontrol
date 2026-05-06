@@ -727,18 +727,12 @@ async function handleGetRegistros(userId, DB) {
 async function handlePostRegistro(request, session, DB) {
   const body = await request.json();
   const userId = body.usuarioId || session.id;
-
-  // Deduplication: if the client record already has a local ID, prevent duplicate inserts
   const localId = body.datos?.id;
-  if (localId) {
-    const existing = await DB.prepare(
-      "SELECT id FROM registros_verificacion WHERE usuario_id = ? AND json_extract(datos_json, '$.id') = ?"
-    ).bind(userId, localId).first();
-    if (existing) return json({ id: existing.id }, 200);
-  }
 
+  // INSERT OR IGNORE relies on the UNIQUE index (usuario_id, json_extract(datos_json,'$.id'))
+  // to silently discard concurrent duplicate inserts in an atomic way.
   const { meta } = await DB.prepare(
-    'INSERT INTO registros_verificacion (usuario_id, folio_dict, folio_holo, folio_uva, marca, modelo, tipo_instrumento, resultado, fecha, hora, notas, datos_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+    'INSERT OR IGNORE INTO registros_verificacion (usuario_id, folio_dict, folio_holo, folio_uva, marca, modelo, tipo_instrumento, resultado, fecha, hora, notas, datos_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
   ).bind(
     userId,
     body.folioDict || null, body.folioHolo || null, body.folioUva || null,
@@ -747,7 +741,20 @@ async function handlePostRegistro(request, session, DB) {
     body.hora || null, body.notas || null,
     body.datos ? JSON.stringify(body.datos) : null
   ).run();
-  return json({ id: meta.last_row_id }, 201);
+
+  if (meta.changes > 0) {
+    return json({ id: meta.last_row_id }, 201);
+  }
+
+  // Row already existed (IGNORE fired) — return its id so the client can mark it synced
+  if (localId) {
+    const existing = await DB.prepare(
+      "SELECT id FROM registros_verificacion WHERE usuario_id = ? AND json_extract(datos_json, '$.id') = ?"
+    ).bind(userId, localId).first();
+    if (existing) return json({ id: existing.id }, 200);
+  }
+  // INSERT OR IGNORE fired without a localId to look up (should not occur in normal usage)
+  return json({ id: null }, 409);
 }
 
 async function handlePutRegistro(request, id, session, DB) {

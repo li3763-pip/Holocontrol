@@ -162,6 +162,7 @@ function showProtoBadge(){ /* no-op */ }
 const TODAY = new Date().toISOString().split('T')[0];
 let SESSION = null;
 let registros = [];
+const _syncingIds = new Set(); // IDs de registros cuyo POST a la API está en vuelo
 let ndStep = 1;
 let NUM_INSTR = 1; // cuántos instrumentos en la inspección actual
 
@@ -1080,6 +1081,7 @@ function guardarRegistro(){
   localStorage.setItem('reg_'+SESSION.user, JSON.stringify(registros));
   // Guardar también en la API (sin bloquear el flujo)
   if(SESSION.id) {
+    _syncingIds.add(nuevo.id);
     api.post('/api/registros', {
       usuarioId: SESSION.id,
       fecha: nuevo.fecha || new Date().toISOString().slice(0,10),
@@ -1095,7 +1097,8 @@ function guardarRegistro(){
         nuevo.status = 'ok';
         console.warn('sync registro localStorage:', e2.message);
       }
-    }).catch(e => console.warn('sync registro API:', e.message));
+    }).catch(e => console.warn('sync registro API:', e.message))
+      .finally(() => _syncingIds.delete(nuevo.id));
   }
   closeNuevo();
   renderHome();
@@ -1616,13 +1619,14 @@ function doSync(){
   }
 
   if(SESSION && SESSION.id) {
-    // Sincronizar registros pendientes con la API
-    const pending = registros.filter(r => r.status === 'ok');
+    // Sincronizar registros pendientes con la API; excluir los que ya tienen un POST en vuelo
+    const pending = registros.filter(r => r.status === 'ok' && !_syncingIds.has(r.id));
     if (!pending.length) {
       setTimeout(() => finish(true), 800);
       return;
     }
     let anyOk = false;
+    pending.forEach(r => _syncingIds.add(r.id));
     Promise.all(
       pending.map(r =>
         api.post('/api/registros', {
@@ -1633,6 +1637,7 @@ function doSync(){
           resultado: r.instrumentos && r.instrumentos.some(i => i.cumpleNom === 'C') ? 'aprobado' : (r.resultado || 'rechazado'),
           datos:     r
         }).then(() => { anyOk = true; }).catch(() => {})
+          .finally(() => _syncingIds.delete(r.id))
       )
     ).finally(() => setTimeout(() => finish(anyOk), 500));
   } else {
