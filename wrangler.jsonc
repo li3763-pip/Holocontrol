@@ -21,7 +21,6 @@
     }
   ],
   "vars": {
-    // En producción usa: wrangler secret put JWT_SECRET
     "JWT_SECRET": "holocontrol-dev-change-me"
   }
 }
