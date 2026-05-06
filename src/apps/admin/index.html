@@ -419,18 +419,18 @@
   <!-- TAB: Catálogo completo -->
   <div id="ep-panel-catalogo" style="display:none">
     <div class="toolbar" style="margin-bottom:10px">
-      <input class="si stretch" id="ep-cat-buscar" placeholder="Buscar No. de inventario…" oninput="epRenderCatalogo()">
-      <select class="si" id="ep-cat-serie" onchange="epRenderCatalogo()">
+      <input class="si stretch" id="ep-cat-buscar" placeholder="Buscar No. de inventario…" aria-label="Buscar equipo por número de inventario" oninput="epRenderCatalogo()">
+      <select class="si" id="ep-cat-serie" aria-label="Filtrar por serie" onchange="epRenderCatalogo()">
         <option value="">Todas las series</option>
         <option>M</option><option>C</option><option>D</option><option>V</option>
         <option>MF</option><option>CF</option><option>DF</option><option>VF</option>
       </select>
-      <select class="si" id="ep-cat-clase" onchange="epRenderCatalogo()">
+      <select class="si" id="ep-cat-clase" aria-label="Filtrar por clase" onchange="epRenderCatalogo()">
         <option value="">Todas las clases</option>
         <option value="M1">M1</option>
         <option value="F2">F2</option>
       </select>
-      <select class="si" id="ep-cat-estado" onchange="epRenderCatalogo()">
+      <select class="si" id="ep-cat-estado" aria-label="Filtrar por estado" onchange="epRenderCatalogo()">
         <option value="">Todos los estados</option>
         <option value="libre">Libre</option>
         <option value="asignado">Asignado</option>
