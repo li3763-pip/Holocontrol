@@ -753,7 +753,8 @@ async function handlePostRegistro(request, session, DB) {
     ).bind(userId, localId).first();
     if (existing) return json({ id: existing.id }, 200);
   }
-  return json({ id: null }, 200);
+  // INSERT OR IGNORE fired without a localId to look up (should not occur in normal usage)
+  return json({ id: null }, 409);
 }
 
 async function handlePutRegistro(request, id, session, DB) {
